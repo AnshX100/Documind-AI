@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - DocuMind AI{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card auth-card border-0 shadow-lg glass-effect">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-dark mb-2">Welcome Back</h2>
+                        <p class="text-muted">Sign in to continue to DocuMind AI</p>
+                    </div>
+
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-4 form-floating">
+                            {{ form.email(class="form-control bg-light border-0", placeholder="name@example.com") }}
+                            {{ form.email.label }}
+                            {% for error in form.email.errors %}
+                                <span class="text-danger small">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4 form-floating">
+                            {{ form.password(class="form-control bg-light border-0", placeholder="Password") }}
+                            {{ form.password.label }}
+                            {% for error in form.password.errors %}
+                                <span class="text-danger small">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                {{ form.remember_me(class="form-check-input") }}
+                                {{ form.remember_me.label(class="form-check-label text-muted") }}
+                            </div>
+                            <a href="#" class="text-primary text-decoration-none small fw-semibold">Forgot password?</a>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm") }}
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="text-muted small">
+                            Don't have an account? 
+                            <a href="{{ url_for('auth.register') }}" class="text-primary fw-semibold text-decoration-none">Sign Up</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

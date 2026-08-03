@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Register - DocuMind AI{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-3 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card auth-card border-0 shadow-lg glass-effect">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-dark mb-2">Create an Account</h2>
+                        <p class="text-muted">Start extracting insights with DocuMind AI</p>
+                    </div>
+
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3 form-floating">
+                                {{ form.username(class="form-control bg-light border-0", placeholder="Username") }}
+                                {{ form.username.label(class="ms-2") }}
+                                {% for error in form.username.errors %}
+                                    <span class="text-danger small">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3 form-floating">
+                                {{ form.full_name(class="form-control bg-light border-0", placeholder="Full Name") }}
+                                {{ form.full_name.label(class="ms-2") }}
+                                {% for error in form.full_name.errors %}
+                                    <span class="text-danger small">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3 form-floating">
+                            {{ form.email(class="form-control bg-light border-0", placeholder="name@example.com") }}
+                            {{ form.email.label }}
+                            {% for error in form.email.errors %}
+                                <span class="text-danger small">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3 form-floating">
+                            {{ form.password(class="form-control bg-light border-0", placeholder="Password") }}
+                            {{ form.password.label }}
+                            {% for error in form.password.errors %}
+                                <span class="text-danger small">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-4 form-floating">
+                            {{ form.confirm_password(class="form-control bg-light border-0", placeholder="Confirm Password") }}
+                            {{ form.confirm_password.label }}
+                            {% for error in form.confirm_password.errors %}
+                                <span class="text-danger small">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            {{ form.submit(class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm") }}
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="text-muted small">
+                            Already have an account? 
+                            <a href="{{ url_for('auth.login') }}" class="text-primary fw-semibold text-decoration-none">Sign In</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

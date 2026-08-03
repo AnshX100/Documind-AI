@@ -1,0 +1,88 @@
+/* Custom Styles for DocuMind AI */
+:root {
+    --primary-color: #4F46E5;
+    --primary-dark: #3730A3;
+    --secondary-color: #10B981;
+    --background-color: #F3F4F6;
+    --surface-color: #FFFFFF;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Gradients & Backgrounds */
+.bg-primary-gradient {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+}
+
+.glass-effect {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Cards & Auth */
+.auth-card {
+    border-radius: 1.5rem;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Inputs */
+.form-control {
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.25);
+    background-color: #fff !important;
+}
+
+.form-floating > .form-control,
+.form-floating > .form-control-plaintext {
+    padding-top: 1.625rem;
+    padding-bottom: 0.625rem;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4), 0 2px 4px -1px rgba(79, 70, 229, 0.2);
+}
+
+/* Navbar */
+.navbar {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+    letter-spacing: -0.025em;
+}
+
+/* Utilities */
+.rounded-pill {
+    border-radius: 50rem !important;
+}
