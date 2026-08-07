@@ -20,7 +20,7 @@ class BaseConfig:
     # Upload Settings
     UPLOAD_FOLDER: str = str(BASE_DIR / os.getenv("UPLOAD_FOLDER", "uploads"))
     MAX_CONTENT_LENGTH: int = int(os.getenv("MAX_CONTENT_LENGTH", 16 * 1024 * 1024)) # 16 MB
-    ALLOWED_EXTENSIONS: set[str] = {"pdf", "png", "jpg", "jpeg", "webp"}
+    ALLOWED_EXTENSIONS: set[str] = {"pdf", "png", "jpg", "jpeg"}
 
     # AI & OCR API Settings
     OPENAI_API_KEY: str | None = os.getenv("OPENAI_API_KEY")

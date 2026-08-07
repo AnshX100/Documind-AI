@@ -3,7 +3,7 @@
 import os
 from flask import Flask, redirect, url_for
 from app.config import config_by_name
-from app.extensions import db, migrate, login_manager
+from app.extensions import db, migrate, login_manager, csrf
 
 def create_app(config_name: str | None = None) -> Flask:
     """Create and configure the Flask application instance."""
@@ -19,6 +19,7 @@ def create_app(config_name: str | None = None) -> Flask:
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    csrf.init_app(app)
     
     # Login view configuration
     login_manager.login_view = 'auth.login'
@@ -33,9 +34,11 @@ def create_app(config_name: str | None = None) -> Flask:
     # Register blueprints
     from app.auth import auth_bp
     from app.dashboard import dashboard_bp
+    from app.documents import documents_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
+    app.register_blueprint(documents_bp)
     
     # Root route redirects to dashboard if authenticated, else login
     @app.route('/')

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}{{ document.original_filename }} - DocuMind AI{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4 mb-5">
+    
+    <!-- Navigation -->
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('documents.index') }}" class="text-decoration-none text-muted small fw-semibold">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1 mb-1" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/></svg>
+            Back to Documents
+        </a>
+        
+        <div>
+            <a href="{{ url_for('documents.download', id=document.id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 me-2">
+                Download
+            </a>
+            <form action="{{ url_for('documents.delete', id=document.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this document? This cannot be undone.');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">Delete</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar Details -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">Document Details</h5>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted d-block fw-semibold text-uppercase">Filename</small>
+                        <span class="text-dark fw-medium text-break">{{ document.original_filename }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted d-block fw-semibold text-uppercase">Status</small>
+                        {% if document.status == 'pending' %}
+                            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill mt-1">Pending</span>
+                        {% elif document.status == 'processed' %}
+                            <span class="badge bg-success px-3 py-2 rounded-pill mt-1">Processed</span>
+                        {% else %}
+                            <span class="badge bg-danger px-3 py-2 rounded-pill mt-1">Failed</span>
+                        {% endif %}
+                    </div>
+                    
+                    <hr class="text-muted opacity-25 my-4">
+                    
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <small class="text-muted d-block fw-semibold text-uppercase">Type</small>
+                            <span class="text-dark fw-medium">{{ document.file_type.split('/')[-1] | upper }}</span>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block fw-semibold text-uppercase">Size</small>
+                            <span class="text-dark fw-medium">{{ (document.file_size / 1024 / 1024) | round(2) }} MB</span>
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted d-block fw-semibold text-uppercase">Uploaded On</small>
+                            <span class="text-dark fw-medium">{{ document.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                        </div>
+                    </div>
+                    
+                    {% if document.error_message %}
+                    <div class="alert alert-danger mt-4 small rounded-3 border-0">
+                        <strong>Error:</strong> {{ document.error_message }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Area -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 bg-light d-flex flex-column">
+                <div class="card-header bg-white border-bottom-0 p-3 text-center text-muted fw-semibold small">
+                    Preview
+                </div>
+                <div class="card-body p-0 flex-grow-1 d-flex align-items-center justify-content-center bg-secondary bg-opacity-10 position-relative" style="min-height: 500px;">
+                    
+                    {% if is_image %}
+                        <!-- Download endpoint serves the file securely for preview -->
+                        <img src="{{ url_for('documents.download', id=document.id) }}" class="img-fluid" style="max-height: 800px; object-fit: contain;" alt="{{ document.original_filename }}">
+                    {% elif is_pdf %}
+                        <object data="{{ url_for('documents.download', id=document.id) }}" type="application/pdf" width="100%" height="800px">
+                            <div class="text-center p-5">
+                                <p class="text-muted mb-3">Your browser doesn't support embedded PDFs.</p>
+                                <a href="{{ url_for('documents.download', id=document.id) }}" class="btn btn-primary rounded-pill">Download PDF to view</a>
+                            </div>
+                        </object>
+                    {% else %}
+                        <div class="text-center p-5 text-muted">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-file-earmark-text mb-3 opacity-50" viewBox="0 0 16 16">
+                                <path d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/>
+                                <path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5L9.5 0zm0 1v2.5a1 1 0 0 0 1 1H13v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
+                            </svg>
+                            <p>Preview not available for this file type.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
