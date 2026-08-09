@@ -100,11 +100,7 @@
                                     <li><a class="dropdown-item" href="{{ url_for('documents.download', id=doc.id) }}">Download</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <form action="{{ url_for('documents.delete', id=doc.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this document? This cannot be undone.');">
-                                            <!-- Since we don't have a specific CSRF form for delete, we use a raw hidden tag from Flask-WTF if available, or just a submit. Let's use standard POST for now -->
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button type="submit" class="dropdown-item text-danger">Delete</button>
-                                        </form>
+                                        <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-doc-id="{{ doc.id }}" data-doc-name="{{ doc.original_filename }}">Delete</button>
                                     </li>
                                 </ul>
                             </div>
@@ -161,4 +157,48 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Delete Confirmation Modal (Shared) -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow rounded-4">
+      <div class="modal-header border-bottom-0">
+        <h5 class="modal-title fw-bold text-danger" id="deleteModalLabel">Confirm Deletion</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-dark">
+        Are you sure you want to permanently delete <strong id="deleteModalDocName">this document</strong>? This action cannot be undone.
+      </div>
+      <div class="modal-footer border-top-0">
+        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+        <form id="deleteForm" method="POST" action="">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">Delete Document</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var docId = button.getAttribute('data-doc-id');
+            var docName = button.getAttribute('data-doc-name');
+            
+            // Update document name in modal
+            document.getElementById('deleteModalDocName').textContent = docName;
+            
+            // Generate the dynamic action URL
+            var actionUrl = "{{ url_for('documents.delete', id=0) }}".replace('/0/', '/' + docId + '/');
+            
+            // Set form action
+            document.getElementById('deleteForm').setAttribute('action', actionUrl);
+        });
+    }
+});
+</script>
 {% endblock %}

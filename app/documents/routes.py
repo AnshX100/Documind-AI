@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import current_user, login_required
 
 from app.documents.forms import UploadDocumentForm
-from app.services import document_service, document_repository
+from app.services import document_service, document_repository, document_processing_service
 
 documents_bp = Blueprint('documents', __name__, url_prefix='/documents')
 
@@ -36,22 +36,49 @@ def index():
 @documents_bp.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
-    """Upload a new document."""
+    """Upload a new document and process it via OCR immediately."""
     form = UploadDocumentForm()
     
     if form.validate_on_submit():
+        # 1. Upload and save the file securely
         success, message, document = document_service.upload_document(
             user_id=current_user.id,
             file=form.document.data
         )
         
-        if success:
-            flash(message, 'success')
-            return redirect(url_for('documents.index'))
+        if success and document:
+            # 2. Immediately attempt to process via OCR
+            ocr_success, ocr_message = document_processing_service.process_document(
+                document_id=document.id,
+                user_id=current_user.id
+            )
+            
+            if ocr_success:
+                flash(f"{message} OCR completed successfully.", 'success')
+            else:
+                flash(f"{message} However, OCR failed: {ocr_message}", 'warning')
+                
+            return redirect(url_for('documents.detail', id=document.id))
         else:
             flash(message, 'danger')
             
     return render_template('documents/upload.html', title='Upload Document', form=form)
+
+@documents_bp.route('/<int:id>/process', methods=['POST'])
+@login_required
+def process(id):
+    """Manually trigger OCR processing for a document."""
+    success, message = document_processing_service.process_document(
+        document_id=id,
+        user_id=current_user.id
+    )
+    
+    if success:
+        flash(message, 'success')
+    else:
+        flash(message, 'danger')
+        
+    return redirect(url_for('documents.detail', id=id))
 
 @documents_bp.route('/<int:id>', methods=['GET'])
 @login_required
@@ -88,6 +115,22 @@ def download(id):
         result,
         as_attachment=True,
         download_name=document.original_filename,
+        mimetype=document.file_type
+    )
+
+@documents_bp.route('/<int:id>/preview', methods=['GET'])
+@login_required
+def preview(id):
+    """Securely preview a document inline (no automatic download)."""
+    success, result, document = document_service.get_document_for_download(id, current_user.id)
+    
+    if not success:
+        flash(result, 'danger')
+        return redirect(url_for('documents.index'))
+        
+    return send_file(
+        result,
+        as_attachment=False,
         mimetype=document.file_type
     )
 

@@ -65,3 +65,7 @@ class BaseRepository(Generic[T]):
     def commit(self) -> None:
         """Commit current database transaction session."""
         db.session.commit()
+
+    def rollback(self) -> None:
+        """Rollback current database transaction session."""
+        db.session.rollback()

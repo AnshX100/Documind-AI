@@ -23,6 +23,9 @@ class BaseConfig:
     ALLOWED_EXTENSIONS: set[str] = {"pdf", "png", "jpg", "jpeg"}
 
     # AI & OCR API Settings
+    TESSERACT_CMD: str | None = os.getenv("TESSERACT_CMD")
+    OCR_LANGUAGE: str = os.getenv("OCR_LANGUAGE", "eng")
+    
     OPENAI_API_KEY: str | None = os.getenv("OPENAI_API_KEY")
     OPENAI_BASE_URL: str = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
