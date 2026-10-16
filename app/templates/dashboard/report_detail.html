@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}{{ report.report_name }} — FinPilot AI{% endblock %}
+
+{% block content %}
+<header class="top" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px;">
+    <div>
+        <p class="eyebrow"><a href="{{ url_for('placeholders.reports') }}" style="color: var(--brand-primary); text-decoration: none;">← REPORTS HISTORY</a></p>
+        <h1 style="margin-top: 4px;">{{ report.report_name }}</h1>
+        <p>Compiled on {{ report.created_at.strftime('%d %b %Y, %H:%M UTC') }} · Period: {{ dataset.period_label }}</p>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <a href="{{ url_for('placeholders.reports') }}" class="secondary" style="padding: 10px 16px; text-decoration: none;">Back to List</a>
+        {% if report.status == 'completed' %}
+        <a href="{{ url_for('placeholders.download_report', report_id=report.id) }}" class="primary" style="padding: 10px 20px; font-weight: 700; text-decoration: none;">
+            ⬇ Download PDF Report
+        </a>
+        {% endif %}
+    </div>
+</header>
+
+<!-- Metrics Overview Cards -->
+<div class="metrics" style="margin-top: 20px;">
+    <div class="metric">
+        <span>TOTAL EXPENSES</span>
+        <strong>₹{{ "{:,.2f}".format(dataset.overview.total_spending or 0.0) }}</strong>
+        <small>Subtotal: ₹{{ "{:,.2f}".format(dataset.overview.total_subtotal or 0.0) }}</small>
+    </div>
+
+    <div class="metric">
+        <span>ANALYZED DOCUMENTS</span>
+        <strong>{{ dataset.overview.analyzed_documents or 0 }}</strong>
+        <small>Total workspace files: {{ dataset.overview.total_documents or 0 }}</small>
+    </div>
+
+    <div class="metric">
+        <span>AVG TRANSACTION</span>
+        <strong>₹{{ "{:,.2f}".format(dataset.overview.average_transaction or 0.0) }}</strong>
+        <small>Tax rate: {{ dataset.overview.effective_tax_rate or 0.0 }}%</small>
+    </div>
+
+    <div class="metric">
+        <span>AUDIT HEALTH INDEX</span>
+        <strong style="color: var(--emerald);">{{ dataset.due_diligence.overall_score or 100 }}/100</strong>
+        <small>Risk profile: {{ dataset.due_diligence.risk_profile or 'Low' }}</small>
+    </div>
+</div>
+
+<div class="grid two" style="margin-top: 24px; gap: 24px;">
+    <!-- Top Categories -->
+    <article class="card">
+        <h2 style="font-size: 15px; margin-top: 0; margin-bottom: 14px;">Top Expense Categories</h2>
+        {% if dataset.categories %}
+        <div class="table-responsive">
+            <table class="table" style="font-size: 13px;">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th style="text-align: right;">Spending</th>
+                        <th style="text-align: right;">Share</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in dataset.categories[:6] %}
+                    <tr>
+                        <td style="font-weight: 600; color: var(--ink);">{{ c.category }}</td>
+                        <td style="text-align: right; font-weight: 600;">₹{{ "{:,.2f}".format(c.total) }}</td>
+                        <td style="text-align: right; color: var(--muted);">{{ c.percentage }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--muted); font-size: 13px;">No category spending recorded for this period.</p>
+        {% endif %}
+    </article>
+
+    <!-- Top Vendors -->
+    <article class="card">
+        <h2 style="font-size: 15px; margin-top: 0; margin-bottom: 14px;">Top Vendors</h2>
+        {% if dataset.vendors %}
+        <div class="table-responsive">
+            <table class="table" style="font-size: 13px;">
+                <thead>
+                    <tr>
+                        <th>Vendor</th>
+                        <th style="text-align: right;">Total Spent</th>
+                        <th style="text-align: right;">Share</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in dataset.vendors[:6] %}
+                    <tr>
+                        <td style="font-weight: 600; color: var(--ink);">{{ v.vendor }}</td>
+                        <td style="text-align: right; font-weight: 600;">₹{{ "{:,.2f}".format(v.total) }}</td>
+                        <td style="text-align: right; color: var(--muted);">{{ v.percentage }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--muted); font-size: 13px;">No vendor data recorded for this period.</p>
+        {% endif %}
+    </article>
+</div>
+
+<!-- Source Documents -->
+<article class="card" style="margin-top: 24px;">
+    <h2 style="font-size: 15px; margin-top: 0; margin-bottom: 14px;">Source Documents ({{ dataset.source_documents|length }})</h2>
+    {% if dataset.source_documents %}
+    <div class="table-responsive">
+        <table class="table" style="font-size: 13px;">
+            <thead>
+                <tr>
+                    <th>Doc ID</th>
+                    <th>Filename</th>
+                    <th>Vendor</th>
+                    <th>Date</th>
+                    <th style="text-align: right;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in dataset.source_documents[:10] %}
+                <tr>
+                    <td style="color: var(--muted);">#{{ s.document_id }}</td>
+                    <td style="font-weight: 600; color: var(--ink);">{{ s.original_filename }}</td>
+                    <td style="color: var(--muted);">{{ s.vendor_name or '—' }}</td>
+                    <td style="color: var(--muted);">{{ s.invoice_date or '—' }}</td>
+                    <td style="text-align: right; font-weight: 600; color: var(--ink);">₹{{ "{:,.2f}".format(s.total_amount) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: var(--muted); font-size: 13px;">No source documents bound to this reporting period.</p>
+    {% endif %}
+</article>
+{% endblock %}

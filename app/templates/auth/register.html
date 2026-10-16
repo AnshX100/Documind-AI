@@ -1,77 +1,204 @@
 {% extends "base.html" %}
 
-{% block title %}Register - DocuMind AI{% endblock %}
+{% block title %}Register — FinPilot AI{% endblock %}
 
 {% block content %}
-<div class="container mt-5 pt-3 mb-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card auth-card border-0 shadow-lg glass-effect">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <h2 class="fw-bold text-dark mb-2">Create an Account</h2>
-                        <p class="text-muted">Start extracting insights with DocuMind AI</p>
+<div class="auth-split">
+    <!-- Form Side (Left) -->
+    <div class="auth-form-side">
+        <div style="width: 100%; max-width: 440px;">
+            <div style="margin-bottom: 32px;">
+                <a href="/" class="brand" style="color: var(--ink); padding: 0; font-size: 24px;">FINPILOT <span style="color: var(--brand-primary);">AI</span></a>
+            </div>
+            
+            <h2 style="font-size: 26px; font-weight: 800; letter-spacing: -1px; margin: 0 0 8px; color: var(--ink);">Create Account</h2>
+            <p style="color: var(--muted); margin: 0 0 24px; font-size: 13px;">Start generating verifiable financial intelligence today.</p>
+            
+            <!-- Google OAuth Register Option -->
+            <div style="margin-bottom: 20px;">
+                <a href="{{ url_for('auth.google_login') }}" class="secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px; text-decoration: none; font-weight: 700; font-size: 13px; color: var(--ink); border: 1px solid var(--line); border-radius: 6px; background: #ffffff;">
+                    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z" fill="#4285F4"/>
+                        <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+                        <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+                        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                    </svg>
+                    Continue with Google
+                </a>
+            </div>
+
+            <div style="display: flex; align-items: center; margin-bottom: 24px;">
+                <div style="flex: 1; border-bottom: 1px solid var(--line);"></div>
+                <span style="padding: 0 12px; font-size: 11px; color: var(--muted); font-weight: 700;">OR</span>
+                <div style="flex: 1; border-bottom: 1px solid var(--line);"></div>
+            </div>
+
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div>
+                        <label for="username" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 11px; color: var(--muted); letter-spacing: 0.5px;">USERNAME</label>
+                        {{ form.username(id="username", class="search", style="width: 100%;", placeholder="johndoe") }}
+                        {% for error in form.username.errors %}
+                            <small style="color: var(--red); font-weight: 700; display: block; margin-top: 4px;">{{ error }}</small>
+                        {% endfor %}
                     </div>
-
-                    <form method="POST" action="">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3 form-floating">
-                                {{ form.username(class="form-control bg-light border-0", placeholder="Username") }}
-                                {{ form.username.label(class="ms-2") }}
-                                {% for error in form.username.errors %}
-                                    <span class="text-danger small">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                            
-                            <div class="col-md-6 mb-3 form-floating">
-                                {{ form.full_name(class="form-control bg-light border-0", placeholder="Full Name") }}
-                                {{ form.full_name.label(class="ms-2") }}
-                                {% for error in form.full_name.errors %}
-                                    <span class="text-danger small">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                        <div class="mb-3 form-floating">
-                            {{ form.email(class="form-control bg-light border-0", placeholder="name@example.com") }}
-                            {{ form.email.label }}
-                            {% for error in form.email.errors %}
-                                <span class="text-danger small">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-
-                        <div class="mb-3 form-floating">
-                            {{ form.password(class="form-control bg-light border-0", placeholder="Password") }}
-                            {{ form.password.label }}
-                            {% for error in form.password.errors %}
-                                <span class="text-danger small">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                        
-                        <div class="mb-4 form-floating">
-                            {{ form.confirm_password(class="form-control bg-light border-0", placeholder="Confirm Password") }}
-                            {{ form.confirm_password.label }}
-                            {% for error in form.confirm_password.errors %}
-                                <span class="text-danger small">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-
-                        <div class="d-grid gap-2 mt-4">
-                            {{ form.submit(class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm") }}
-                        </div>
-                    </form>
                     
-                    <div class="text-center mt-4">
-                        <p class="text-muted small">
-                            Already have an account? 
-                            <a href="{{ url_for('auth.login') }}" class="text-primary fw-semibold text-decoration-none">Sign In</a>
-                        </p>
+                    <div>
+                        <label for="full_name" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 11px; color: var(--muted); letter-spacing: 0.5px;">FULL NAME</label>
+                        {{ form.full_name(id="full_name", class="search", style="width: 100%;", placeholder="John Doe") }}
+                        {% for error in form.full_name.errors %}
+                            <small style="color: var(--red); font-weight: 700; display: block; margin-top: 4px;">{{ error }}</small>
+                        {% endfor %}
                     </div>
                 </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <label for="email" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 11px; color: var(--muted); letter-spacing: 0.5px;">EMAIL ADDRESS</label>
+                    {{ form.email(id="email", class="search", style="width: 100%;", placeholder="john@consulting.com") }}
+                    {% for error in form.email.errors %}
+                        <small style="color: var(--red); font-weight: 700; display: block; margin-top: 4px;">{{ error }}</small>
+                    {% endfor %}
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <label for="password" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 11px; color: var(--muted); letter-spacing: 0.5px;">PASSWORD (MIN 8 CHARACTERS)</label>
+                    {{ form.password(id="password", class="search", style="width: 100%;", placeholder="••••••••") }}
+                    {% for error in form.password.errors %}
+                        <small style="color: var(--red); font-weight: 700; display: block; margin-top: 4px;">{{ error }}</small>
+                    {% endfor %}
+                </div>
+                
+                <div style="margin-bottom: 28px;">
+                    <label for="confirm_password" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 11px; color: var(--muted); letter-spacing: 0.5px;">CONFIRM PASSWORD</label>
+                    {{ form.confirm_password(id="confirm_password", class="search", style="width: 100%;", placeholder="••••••••") }}
+                    {% for error in form.confirm_password.errors %}
+                        <small style="color: var(--red); font-weight: 700; display: block; margin-top: 4px;">{{ error }}</small>
+                    {% endfor %}
+                </div>
+                
+                <button type="submit" class="primary" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 700;">
+                    Register Workspace →
+                </button>
+            </form>
+            
+            <div style="margin-top: 36px; text-align: center; font-size: 13px; color: var(--muted);">
+                Already have an account? <a href="{{ url_for('auth.login') }}" class="link">Sign In</a>
             </div>
         </div>
     </div>
+    
+    <!-- Visual Side (Right) -->
+    <div class="auth-visual-side">
+        <h2>Your Workspace Setup</h2>
+        <p>Set up an end-to-end workspace pipelines that automatically parses, formats, and indexes documents.</p>
+        
+        <div class="animation-container">
+            <svg width="240" height="200" viewBox="0 0 240 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Central Cloud Workspace -->
+                <rect x="90" y="70" width="60" height="60" rx="12" stroke="#386ff5" stroke-width="2.5" fill="rgba(56, 111, 245, 0.05)" id="cloud-workspace"/>
+                <circle cx="120" cy="100" r="10" stroke="#44d4c8" stroke-width="2" fill="none"/>
+                
+                <!-- Floating Inward Document Nodes -->
+                <g id="doc1">
+                    <rect x="20" y="30" width="30" height="40" rx="4" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="rgba(255,255,255,0.02)"/>
+                    <line x1="26" y1="40" x2="40" y2="40" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+                    <line x1="26" y1="48" x2="44" y2="48" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                </g>
+                <g id="doc2">
+                    <rect x="25" y="120" width="30" height="40" rx="4" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="rgba(255,255,255,0.02)"/>
+                    <line x1="31" y1="130" x2="45" y2="130" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+                    <line x1="31" y1="138" x2="49" y2="138" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                </g>
+                
+                <!-- Outward Dashboard Nodes -->
+                <g id="dash1">
+                    <rect x="180" y="40" width="40" height="30" rx="5" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="rgba(255,255,255,0.02)"/>
+                    <line x1="188" y1="55" x2="212" y2="55" stroke="#44d4c8" stroke-width="2"/>
+                </g>
+                <g id="dash2">
+                    <rect x="180" y="115" width="40" height="45" rx="5" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="rgba(255,255,255,0.02)"/>
+                    <circle cx="200" cy="138" r="8" stroke="#386ff5" stroke-width="1.5"/>
+                </g>
+                
+                <!-- Connector lines -->
+                <path d="M50 50 Q 75 75 90 85" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-dasharray="3 3"/>
+                <path d="M55 140 Q 75 120 90 115" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-dasharray="3 3"/>
+                
+                <path d="M150 85 Q 165 75 180 55" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-dasharray="3 3"/>
+                <path d="M150 115 Q 165 120 180 138" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-dasharray="3 3"/>
+                
+                <!-- Flow Text -->
+                <text x="120" y="156" id="flow-label" fill="#44d4c8" font-family="Inter" font-size="10" font-weight="bold" text-anchor="middle" letter-spacing="1">UPLOAD</text>
+            </svg>
+        </div>
+    </div>
 </div>
+
+<style>
+    /* Inline helper for Register animations */
+    #cloud-workspace {
+        animation: pulseCloud 3s infinite ease-in-out;
+    }
+    #doc1 {
+        animation: flowIn1 4s infinite linear;
+    }
+    #doc2 {
+        animation: flowIn2 4s infinite linear 2s;
+    }
+    #dash1 {
+        animation: glowOut1 4s infinite ease-in-out;
+    }
+    #dash2 {
+        animation: glowOut2 4s infinite ease-in-out 1.5s;
+    }
+    #flow-label {
+        animation: cycleText 5s infinite step-end;
+    }
+
+    @keyframes pulseCloud {
+        0%, 100% { fill: rgba(56, 111, 245, 0.05); stroke-width: 2.5; }
+        50% { fill: rgba(68, 212, 200, 0.1); stroke-width: 3.5; }
+    }
+    @keyframes flowIn1 {
+        0% { transform: translate(0, 0); opacity: 0.8; }
+        40% { transform: translate(45px, 35px); opacity: 0; }
+        100% { transform: translate(0, 0); opacity: 0; }
+    }
+    @keyframes flowIn2 {
+        0% { transform: translate(0, 0); opacity: 0.8; }
+        40% { transform: translate(40px, -25px); opacity: 0; }
+        100% { transform: translate(0, 0); opacity: 0; }
+    }
+    @keyframes glowOut1 {
+        0%, 100% { opacity: 0.2; }
+        50% { opacity: 1; }
+    }
+    @keyframes glowOut2 {
+        0%, 100% { opacity: 0.2; }
+        50% { opacity: 1; }
+    }
+    @keyframes cycleText {
+        0% { content: "UPLOAD"; text-shadow: 0 0 5px rgba(68, 212, 200, 0.5); }
+        20% { content: "EXTRACT"; }
+        40% { content: "VALIDATE"; }
+        60% { content: "ANALYZE"; }
+        80% { content: "UNDERSTAND"; }
+    }
+</style>
+
+<script>
+    // Cycle text content in SVG text label dynamically
+    document.addEventListener('DOMContentLoaded', () => {
+        const label = document.getElementById('flow-label');
+        if (!label) return;
+        const steps = ["UPLOAD", "EXTRACT", "VALIDATE", "ANALYZE", "UNDERSTAND"];
+        let idx = 0;
+        setInterval(() => {
+            idx = (idx + 1) % steps.length;
+            label.textContent = steps[idx];
+        }, 1200);
+    });
+</script>
 {% endblock %}

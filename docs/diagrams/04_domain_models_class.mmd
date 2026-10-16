@@ -1,0 +1,76 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#ffffff', 'primaryColor': '#ffffff', 'primaryBorderColor': '#2563eb', 'primaryTextColor': '#0f172a', 'lineColor': '#475569'}}}%%
+classDiagram
+    class User {
+        +int id
+        +string email
+        +string password_hash
+        +string role
+        +string google_sub
+        +datetime created_at
+        +check_password(password) bool
+    }
+
+    class Document {
+        +int id
+        +int user_id
+        +string filename
+        +string original_filename
+        +string file_path
+        +string file_type
+        +int file_size
+        +string status
+        +datetime created_at
+    }
+
+    class DocumentAnalysis {
+        +int id
+        +int document_id
+        +json extracted_data
+        +json metrics
+        +json anomalies
+        +float confidence_score
+        +datetime updated_at
+    }
+
+    class Report {
+        +int id
+        +int user_id
+        +string title
+        +string report_type
+        +json summary_data
+        +string file_path
+        +datetime created_at
+    }
+
+    class ChatHistory {
+        +int id
+        +int user_id
+        +string session_id
+        +string role
+        +text message
+        +json evidence_metadata
+        +datetime created_at
+    }
+
+    class StorageService {
+        +save_file(file, user_id) string
+        +delete_file(file_path) bool
+        +validate_magic_bytes(stream, expected_type) bool
+    }
+
+    class DocumentService {
+        +upload_document(user_id, file) Document
+        +delete_document(doc_id, user_id) bool
+    }
+
+    class FinancialIntelligenceService {
+        +calculate_ratios(extracted_data) dict
+        +detect_anomalies(data) list
+    }
+
+    User "1" --> "*" Document : owns
+    User "1" --> "*" Report : generates
+    User "1" --> "*" ChatHistory : maintains
+    Document "1" --> "1" DocumentAnalysis : analyzed_by
+    DocumentService ..> StorageService : uses
+    DocumentService ..> FinancialIntelligenceService : triggers

@@ -1,59 +1,148 @@
 {% extends "base.html" %}
 
-{% block title %}Sign In - DocuMind AI{% endblock %}
+{% block title %}Sign In — FinPilot AI{% endblock %}
 
 {% block content %}
-<div class="container mt-5 pt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card auth-card border-0 shadow-lg glass-effect">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <h2 class="fw-bold text-dark mb-2">Welcome Back</h2>
-                        <p class="text-muted">Sign in to continue to DocuMind AI</p>
-                    </div>
+<div class="auth-split">
+    <!-- Form Side (Left) -->
+    <div class="auth-form-side">
+        <div style="width: 100%; max-width: 360px;">
+            <div style="margin-bottom: 32px;">
+                <a href="/" class="brand" style="color: var(--ink); padding: 0; font-size: 24px;">FINPILOT <span style="color: var(--brand-primary);">AI</span></a>
+            </div>
+            
+            <h2 style="font-size: 26px; font-weight: 800; letter-spacing: -1px; margin: 0 0 8px; color: var(--ink);">Sign In</h2>
+            <p style="color: var(--muted); margin: 0 0 24px; font-size: 13px;">Welcome back! Access your financial intelligence workspace.</p>
+            
+            <!-- Google OAuth Login Option -->
+            <div style="margin-bottom: 20px;">
+                <a href="{{ url_for('auth.google_login') }}" class="secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px; text-decoration: none; font-weight: 700; font-size: 13px; color: var(--ink); border: 1px solid var(--line); border-radius: 6px; background: #ffffff;">
+                    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z" fill="#4285F4"/>
+                        <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+                        <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+                        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                    </svg>
+                    Continue with Google
+                </a>
+            </div>
 
-                    <form method="POST" action="">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="mb-4 form-floating">
-                            {{ form.email(class="form-control bg-light border-0", placeholder="name@example.com") }}
-                            {{ form.email.label }}
-                            {% for error in form.email.errors %}
-                                <span class="text-danger small">{{ error }}</span>
-                            {% endfor %}
-                        </div>
+            <div style="display: flex; align-items: center; margin-bottom: 24px;">
+                <div style="flex: 1; border-bottom: 1px solid var(--line);"></div>
+                <span style="padding: 0 12px; font-size: 11px; color: var(--muted); font-weight: 700;">OR</span>
+                <div style="flex: 1; border-bottom: 1px solid var(--line);"></div>
+            </div>
 
-                        <div class="mb-4 form-floating">
-                            {{ form.password(class="form-control bg-light border-0", placeholder="Password") }}
-                            {{ form.password.label }}
-                            {% for error in form.password.errors %}
-                                <span class="text-danger small">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <div class="form-check">
-                                {{ form.remember_me(class="form-check-input") }}
-                                {{ form.remember_me.label(class="form-check-label text-muted") }}
-                            </div>
-                            <a href="#" class="text-primary text-decoration-none small fw-semibold">Forgot password?</a>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            {{ form.submit(class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm") }}
-                        </div>
-                    </form>
-                    
-                    <div class="text-center mt-4">
-                        <p class="text-muted small">
-                            Don't have an account? 
-                            <a href="{{ url_for('auth.register') }}" class="text-primary fw-semibold text-decoration-none">Sign Up</a>
-                        </p>
-                    </div>
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                
+                <div style="margin-bottom: 16px;">
+                    <label for="email" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 11px; color: var(--muted); letter-spacing: 0.5px;">EMAIL ADDRESS</label>
+                    {{ form.email(id="email", class="search", style="width: 100%;", placeholder="alex@consulting.com") }}
+                    {% for error in form.email.errors %}
+                        <small style="color: var(--red); font-weight: 700; display: block; margin-top: 4px;">{{ error }}</small>
+                    {% endfor %}
                 </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label for="password" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 11px; color: var(--muted); letter-spacing: 0.5px;">PASSWORD</label>
+                    {{ form.password(id="password", class="search", style="width: 100%;", placeholder="••••••••") }}
+                    {% for error in form.password.errors %}
+                        <small style="color: var(--red); font-weight: 700; display: block; margin-top: 4px;">{{ error }}</small>
+                    {% endfor %}
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; font-size: 12px;">
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--muted);">
+                        {{ form.remember_me(style="margin-right: 6px; cursor: pointer;") }}
+                        Remember me
+                    </label>
+                    <a href="#" class="link">Forgot password?</a>
+                </div>
+                
+                <button type="submit" class="primary" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 700;">
+                    Sign In →
+                </button>
+            </form>
+            
+            <div style="margin-top: 36px; text-align: center; font-size: 13px; color: var(--muted);">
+                Don't have an account? <a href="{{ url_for('auth.register') }}" class="link">Start free</a>
             </div>
         </div>
     </div>
+    
+    <!-- Visual Side (Right) -->
+    <div class="auth-visual-side">
+        <h2>Document Intelligence</h2>
+        <p>Convert raw invoices, receipts, and bills into structured, verifiable transaction history.</p>
+        
+        <div class="animation-container">
+            <svg width="240" height="200" viewBox="0 0 240 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Document Outline -->
+                <rect x="25" y="15" width="100" height="150" rx="6" stroke="rgba(255, 255, 255, 0.15)" stroke-width="2" fill="rgba(255, 255, 255, 0.02)"/>
+                <line x1="40" y1="35" x2="80" y2="35" stroke="rgba(255, 255, 255, 0.25)" stroke-width="2" stroke-linecap="round"/>
+                <line x1="40" y1="55" x2="110" y2="55" stroke="rgba(255, 255, 255, 0.15)" stroke-width="2" stroke-linecap="round"/>
+                <line x1="40" y1="75" x2="90" y2="75" stroke="rgba(255, 255, 255, 0.15)" stroke-width="2" stroke-linecap="round"/>
+                <line x1="40" y1="95" x2="100" y2="95" stroke="rgba(255, 255, 255, 0.15)" stroke-width="2" stroke-linecap="round"/>
+                <rect x="40" y="115" width="40" height="15" rx="3" fill="rgba(68, 212, 200, 0.1)"/>
+                
+                <!-- Laser Sweep -->
+                <line id="laser" x1="15" y1="25" x2="135" y2="25" stroke="#44d4c8" stroke-width="3" filter="url(#glow)"/>
+                
+                <!-- Connections & Nodes -->
+                <line id="conn1" x1="125" y1="55" x2="175" y2="55" stroke="rgba(56, 111, 245, 0.25)" stroke-width="1.5" stroke-dasharray="3 3"/>
+                <line id="conn2" x1="125" y1="95" x2="185" y2="95" stroke="rgba(68, 212, 200, 0.25)" stroke-width="1.5" stroke-dasharray="3 3"/>
+                
+                <circle id="node1" cx="175" cy="55" r="4.5" fill="#386ff5"/>
+                <circle id="node2" cx="185" cy="95" r="4.5" fill="#44d4c8"/>
+                <circle id="node3" cx="165" cy="135" r="4.5" fill="#386ff5"/>
+                
+                <!-- Extracted bubble -->
+                <g id="data-bubble">
+                    <rect x="150" y="65" width="75" height="22" rx="4" fill="#ffffff"/>
+                    <text x="187.5" y="79" fill="#17223a" font-family="Inter" font-size="9" font-weight="900" text-anchor="middle">₹95,000</text>
+                </g>
+                
+                <defs>
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>
+            </svg>
+        </div>
+    </div>
 </div>
+
+<style>
+    /* Inline helper for Auth animations */
+    #laser {
+        animation: laserSweep 3.5s infinite ease-in-out;
+    }
+    #node1, #conn1 {
+        animation: ocrFade1 3.5s infinite ease-in-out;
+    }
+    #node2, #conn2, #data-bubble {
+        animation: ocrFade2 3.5s infinite ease-in-out;
+    }
+    #node3 {
+        animation: ocrFade3 3.5s infinite ease-in-out;
+    }
+    @keyframes laserSweep {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(125px); }
+    }
+    @keyframes ocrFade1 {
+        0%, 100% { opacity: 0.1; }
+        25%, 75% { opacity: 1; }
+    }
+    @keyframes ocrFade2 {
+        0%, 100% { opacity: 0.1; }
+        45%, 85% { opacity: 1; }
+    }
+    @keyframes ocrFade3 {
+        0%, 100% { opacity: 0.1; }
+        60%, 90% { opacity: 1; }
+    }
+</style>
 {% endblock %}

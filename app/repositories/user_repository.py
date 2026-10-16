@@ -32,6 +32,20 @@ class UserRepository(BaseRepository[User]):
         """
         return User.query.filter_by(email=email.lower().strip()).first()
 
+    def find_by_google_sub(self, google_sub: str) -> User | None:
+        """Find user by unique Google subject identifier (sub).
+
+        Args:
+            google_sub (str): Candidate Google sub string.
+
+        Returns:
+            User | None: User entity if found.
+        """
+        if not google_sub:
+            return None
+        return User.query.filter_by(google_sub=google_sub.strip()).first()
+
+
     def create(
         self,
         username: str,

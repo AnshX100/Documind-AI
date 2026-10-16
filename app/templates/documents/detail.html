@@ -1,158 +1,434 @@
 {% extends "base.html" %}
 
-{% block title %}{{ document.original_filename }} - DocuMind AI{% endblock %}
+{% block title %}{{ document.original_filename }} — Document Intelligence — FinPilot AI{% endblock %}
 
 {% block content %}
-<div class="container mt-5 pt-4 mb-5">
-    
-    <!-- Navigation -->
-    <div class="mb-4 d-flex justify-content-between align-items-center">
-        <a href="{{ url_for('documents.index') }}" class="text-decoration-none text-muted small fw-semibold">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1 mb-1" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/></svg>
-            Back to Documents
-        </a>
-        
-        <div>
-            <a href="{{ url_for('documents.download', id=document.id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 me-2">
-                Download
-            </a>
-            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>
-        </div>
-    </div>
+<!-- Configuration for Modular Document Viewer JS -->
+<div id="viewerConfig" 
+     data-preview-url="{{ url_for('documents.preview', id=document.id) }}"
+     data-is-pdf="{{ 'true' if is_pdf else 'false' }}"
+     data-is-image="{{ 'true' if is_image else 'false' }}"
+     data-is-docx="{{ 'true' if is_docx else 'false' }}">
+</div>
 
-    <div class="row">
-        <!-- Sidebar Details -->
-        <div class="col-lg-4 mb-4">
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-4">Document Details</h5>
-                    
-                    <div class="mb-3">
-                        <small class="text-muted d-block fw-semibold text-uppercase">Filename</small>
-                        <span class="text-dark fw-medium text-break">{{ document.original_filename }}</span>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <small class="text-muted d-block fw-semibold text-uppercase">Status</small>
-                        {% if document.status == 'pending' %}
-                            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill mt-1">Pending</span>
-                        {% elif document.status == 'processed' %}
-                            <span class="badge bg-success px-3 py-2 rounded-pill mt-1">Processed</span>
-                        {% else %}
-                            <span class="badge bg-danger px-3 py-2 rounded-pill mt-1">Failed</span>
-                        {% endif %}
-                    </div>
-                    
-                    <hr class="text-muted opacity-25 my-4">
-                    
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <small class="text-muted d-block fw-semibold text-uppercase">Type</small>
-                            <span class="text-dark fw-medium">{{ document.file_type.split('/')[-1] | upper }}</span>
-                        </div>
-                        <div class="col-6">
-                            <small class="text-muted d-block fw-semibold text-uppercase">Size</small>
-                            <span class="text-dark fw-medium">{{ (document.file_size / 1024 / 1024) | round(2) }} MB</span>
-                        </div>
-                        <div class="col-12">
-                            <small class="text-muted d-block fw-semibold text-uppercase">Uploaded On</small>
-                            <span class="text-dark fw-medium">{{ document.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
-                        </div>
-                    </div>
-                    
-                    {% if document.error_message %}
-                    <div class="alert alert-danger mt-4 small rounded-3 border-0">
-                        <strong>Error:</strong> {{ document.error_message }}
-                        
-                        <form action="{{ url_for('documents.process', id=document.id) }}" method="POST" class="mt-3 text-center">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill w-100">
-                                Retry Processing
-                            </button>
-                        </form>
-                    </div>
-                    {% elif document.status == 'pending' %}
-                    <div class="mt-4">
-                        <form action="{{ url_for('documents.process', id=document.id) }}" method="POST" class="text-center">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100 shadow-sm">
-                                Process Now
-                            </button>
-                        </form>
-                    </div>
-                    {% endif %}
+<!-- Navigation Breadcrumb & Quick Bar -->
+<div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <a href="{{ url_for('documents.index') }}" class="link">← Back to Documents</a>
+    
+    <div style="display: flex; gap: 8px;">
+        <a href="{{ url_for('documents.download', id=document.id) }}" class="secondary" style="text-decoration: none;">Download File</a>
+        <button type="button" class="secondary" style="color: var(--red); border-color: var(--red);" data-bs-toggle="modal" data-bs-target="#deleteModal" data-doc-id="{{ document.id }}" data-doc-name="{{ document.original_filename }}">Delete</button>
+    </div>
+</div>
+
+<!-- Header -->
+<header class="top" style="margin-bottom: 24px;">
+    <div>
+        <p class="eyebrow">DOCUMENT INTELLIGENCE · VERIFIED REVIEW</p>
+        <h1 style="font-size: 26px; word-break: break-all; margin-bottom: 8px;">{{ document.original_filename }}</h1>
+        <p style="margin: 0; color: var(--muted); font-size: 13px;">
+            Uploaded {{ document.created_at.strftime('%d %b %Y, %H:%M') }} · {{ (document.file_size / 1024 / 1024) | round(2) }} MB · Format: {{ document.file_type }}
+        </p>
+    </div>
+</header>
+
+<!-- Honest Status Banner -->
+<div style="margin-bottom: 24px;">
+    {% if document.status == 'processed' %}
+        <div style="background: #e7f9f2; border: 1px solid #a3e6cd; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px; color: #177e61;">✓</span>
+                <div>
+                    <b style="color: #177e61; font-size: 13px; display: block;">Document Processed & Verified</b>
+                    <small style="color: #2e6955; font-size: 11.5px;">Text extracted, financial information parsed, and risk signals evaluated.</small>
                 </div>
             </div>
-            
-            {% if document.status == 'processed' and document.analysis %}
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-header bg-white border-bottom-0 p-3 pt-4 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0">Extracted Text</h6>
-                    <button class="btn btn-sm btn-light rounded-pill" onclick="navigator.clipboard.writeText(document.getElementById('rawText').innerText)">
-                        Copy
-                    </button>
-                </div>
-                <div class="card-body p-0">
-                    <div class="p-3 bg-light m-3 mt-0 rounded border" style="max-height: 400px; overflow-y: auto;">
-                        <pre id="rawText" class="mb-0 small text-dark" style="white-space: pre-wrap; font-family: monospace;">{{ document.analysis.raw_text }}</pre>
-                    </div>
-                </div>
-            </div>
+            {% if document.analysis %}
+                <span class="status" style="background: #ffffff; color: #177e61; border: 1px solid #a3e6cd; font-size: 11px; font-weight: 700;">
+                    Confidence: {{ (document.analysis.confidence_score * 100) | round | int }}%
+                </span>
             {% endif %}
         </div>
-
-        <!-- Preview Area -->
-        <div class="col-lg-8 mb-4">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 bg-light d-flex flex-column">
-                <div class="card-header bg-white border-bottom-0 p-3 text-center text-muted fw-semibold small">
-                    Preview
-                </div>
-                <div class="card-body p-0 flex-grow-1 d-flex align-items-center justify-content-center bg-secondary bg-opacity-10 position-relative" style="min-height: 500px;">
-                    
-                    {% if is_image %}
-                        <!-- Preview endpoint serves the file inline (without attachment header) -->
-                        <img src="{{ url_for('documents.preview', id=document.id) }}" class="img-fluid" style="max-height: 800px; object-fit: contain;" alt="{{ document.original_filename }}">
-                    {% elif is_pdf %}
-                        <object data="{{ url_for('documents.preview', id=document.id) }}" type="application/pdf" width="100%" height="800px">
-                            <div class="text-center p-5">
-                                <p class="text-muted mb-3">Your browser doesn't support embedded PDFs.</p>
-                                <a href="{{ url_for('documents.download', id=document.id) }}" class="btn btn-primary rounded-pill">Download PDF to view</a>
-                            </div>
-                        </object>
-                    {% else %}
-                        <div class="text-center p-5 text-muted">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-file-earmark-text mb-3 opacity-50" viewBox="0 0 16 16">
-                                <path d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/>
-                                <path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5L9.5 0zm0 1v2.5a1 1 0 0 0 1 1H13v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
-                            </svg>
-                            <p>Preview not available for this file type.</p>
-                        </div>
-                    {% endif %}
-                </div>
+    {% elif document.status == 'pending' %}
+        <div style="background: #fff8eb; border: 1px solid #fce3b5; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 18px; color: #b7791f; animation: spin 1.2s infinite linear;">⏳</span>
+            <div>
+                <b style="color: #b7791f; font-size: 13px; display: block;">Document Queued for Processing</b>
+                <small style="color: #8c5a11; font-size: 11.5px;">The document is currently queued for optical character recognition and analysis.</small>
             </div>
         </div>
-    </div>
+    {% else %}
+        <div style="background: #fff0ee; border: 1px solid #f8c4be; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 18px; color: #bd4034;">❌</span>
+            <div>
+                <b style="color: #bd4034; font-size: 13px; display: block;">Extraction Failed</b>
+                <small style="color: #932a20; font-size: 11.5px;">{{ document.error_message or "An unexpected error occurred during processing." }}</small>
+            </div>
+        </div>
+    {% endif %}
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow rounded-4">
-      <div class="modal-header border-bottom-0">
-        <h5 class="modal-title fw-bold text-danger" id="deleteModalLabel">Confirm Deletion</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body text-dark">
-        Are you sure you want to permanently delete <strong>{{ document.original_filename }}</strong>? This action cannot be undone.
-      </div>
-      <div class="modal-footer border-top-0">
-        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-        <form action="{{ url_for('documents.delete', id=document.id) }}" method="POST" class="d-inline">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">Delete Document</button>
-        </form>
-      </div>
+<!-- Primary Financial Total Callout Card (If Processed) -->
+{% if document.status == 'processed' and document.analysis %}
+<div class="card" style="margin-bottom: 24px; padding: 20px; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border: 1px solid var(--line); border-radius: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; align-items: center;">
+    <div>
+        <span style="font-size: 10.5px; color: var(--muted); font-weight: 700; letter-spacing: 0.8px; display: block; margin-bottom: 4px;">TOTAL AMOUNT</span>
+        <strong style="font-size: 32px; font-weight: 850; color: var(--ink); letter-spacing: -1px; display: block;">
+            ₹{{ "{:,.2f}".format(document.analysis.total_amount or 0.0) }}
+        </strong>
     </div>
-  </div>
+    <div>
+        <span style="font-size: 10.5px; color: var(--muted); font-weight: 700; letter-spacing: 0.8px; display: block; margin-bottom: 4px;">VENDOR</span>
+        <b style="font-size: 16px; color: var(--ink); font-weight: 750;">{{ document.analysis.vendor_name or "Vendor not detected" }}</b>
+    </div>
+    <div>
+        <span style="font-size: 10.5px; color: var(--muted); font-weight: 700; letter-spacing: 0.8px; display: block; margin-bottom: 4px;">INVOICE / RECEIPT #</span>
+        <b style="font-size: 15px; color: var(--ink); font-weight: 700;">{{ document.analysis.invoice_number or "Invoice number missing" }}</b>
+    </div>
+    <div>
+        <span style="font-size: 10.5px; color: var(--muted); font-weight: 700; letter-spacing: 0.8px; display: block; margin-bottom: 4px;">DOCUMENT DATE</span>
+        <b style="font-size: 15px; color: var(--ink); font-weight: 700;">{{ document.analysis.invoice_date.strftime('%d %b %Y') if document.analysis.invoice_date else "Date not detected" }}</b>
+    </div>
 </div>
+{% endif %}
+
+<!-- Information Architecture Layout: Main Tabbed Workspace & Sidebar -->
+<div class="doc-detail-grid">
+    <!-- Main Intelligence Workspace (Left Column) -->
+    <div>
+        <!-- Tab Navigation Buttons -->
+        <div style="display: flex; gap: 4px; border-bottom: 2px solid var(--line); margin-bottom: 20px;">
+            <button type="button" class="tab-btn active" onclick="switchTab(event, 'tab-overview')">Overview</button>
+            <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-financials')">Financials</button>
+            <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-risks')">Risks & Anomalies {% if anomalies %}<span style="background: var(--red); color: white; border-radius: 10px; padding: 1px 6px; font-size: 10px; margin-left: 4px;">{{ anomalies | length }}</span>{% endif %}</button>
+            <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-evidence')">Evidence</button>
+            <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-preview')">Document Preview</button>
+        </div>
+
+        <!-- TAB 1: OVERVIEW -->
+        <div id="tab-overview" class="tab-pane active">
+            <article class="card" style="padding: 24px;">
+                <h2 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 16px;">Document Overview</h2>
+                
+                {% if document.status == 'processed' and document.analysis %}
+                    <dl style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px; font-size: 13px; margin: 0 0 20px;">
+                        <dt style="color: var(--muted); font-weight: 600;">Vendor Name</dt>
+                        <dd style="margin: 0; font-weight: 700; color: var(--ink);">{{ document.analysis.vendor_name or "Vendor not detected" }}</dd>
+                        
+                        <dt style="color: var(--muted); font-weight: 600;">Invoice / Reference #</dt>
+                        <dd style="margin: 0; font-weight: 700; color: var(--ink);">{{ document.analysis.invoice_number or "Invoice number missing" }}</dd>
+                        
+                        <dt style="color: var(--muted); font-weight: 600;">Invoice Date</dt>
+                        <dd style="margin: 0; font-weight: 700; color: var(--ink);">{{ document.analysis.invoice_date.strftime('%d %b %Y') if document.analysis.invoice_date else "Date not detected" }}</dd>
+                        
+                        <dt style="color: var(--muted); font-weight: 600;">Category</dt>
+                        <dd style="margin: 0; font-weight: 700;">
+                            <span class="status" style="padding: 2px 8px; border-radius: 4px; font-size: 11px; background: #e8f0ff; color: var(--blue);">
+                                {{ document.analysis.category or 'General' }}
+                            </span>
+                        </dd>
+                        
+                        <dt style="color: var(--muted); font-weight: 600;">Payment Method</dt>
+                        <dd style="margin: 0; font-weight: 700; color: var(--ink);">{{ document.analysis.payment_method or 'Unknown' }}</dd>
+                        
+                        <dt style="color: var(--muted); font-weight: 600;">Extraction Confidence</dt>
+                        <dd style="margin: 0; font-weight: 700; color: {% if document.analysis.confidence_score >= 0.75 %}#177e61{% else %}#a56705{% endif %};">
+                            {{ (document.analysis.confidence_score * 100) | round | int }}%
+                        </dd>
+                    </dl>
+
+                    {% if document.analysis.ai_summary %}
+                        <div style="background: #f8fbff; border: 1px dashed #adc5ef; border-radius: 8px; padding: 14px;">
+                            <h3 style="font-size: 11px; font-weight: 800; color: var(--blue); letter-spacing: 0.5px; margin: 0 0 6px; text-transform: uppercase;">AI Overview Summary</h3>
+                            <p style="font-size: 12.5px; line-height: 1.5; color: #2c3e50; margin: 0; font-style: italic;">
+                                "{{ document.analysis.ai_summary }}"
+                            </p>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <p style="color: var(--muted); font-size: 13px;">No extracted overview data available. Document processing is incomplete or failed.</p>
+                {% endif %}
+            </article>
+        </div>
+
+        <!-- TAB 2: FINANCIALS -->
+        <div id="tab-financials" class="tab-pane">
+            <article class="card" style="padding: 24px;">
+                <h2 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 16px;">Financial Breakdown & Arithmetic Check</h2>
+                
+                {% if document.status == 'processed' and document.analysis %}
+                    <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; color: var(--muted);">
+                            <span>Subtotal Amount</span>
+                            <span style="font-family: monospace; font-weight: 700; color: var(--ink);">₹{{ "{:,.2f}".format(document.analysis.subtotal_amount or 0.0) }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: var(--muted);">
+                            <span>Tax Amount</span>
+                            <span style="font-family: monospace; font-weight: 700; color: var(--ink);">₹{{ "{:,.2f}".format(document.analysis.tax_amount or 0.0) }}</span>
+                        </div>
+                        {% if effective_tax_rate > 0 %}
+                            <div style="display: flex; justify-content: space-between; color: var(--muted); font-size: 12px;">
+                                <span>Effective Tax Rate</span>
+                                <span style="font-family: monospace; font-weight: 600;">{{ effective_tax_rate }}%</span>
+                            </div>
+                        {% endif %}
+                        <div style="border-top: 1px solid var(--line); padding-top: 10px; display: flex; justify-content: space-between; font-weight: 800; color: var(--ink); font-size: 16px;">
+                            <span>Total Declared Amount</span>
+                            <span style="font-family: monospace; color: var(--blue);">₹{{ "{:,.2f}".format(document.analysis.total_amount or 0.0) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Arithmetic Validation Check Box -->
+                    <div style="background: {% if arithmetic_valid %}#f0fdf4{% else %}#fff0ee{% endif %}; border: 1px solid {% if arithmetic_valid %}#bbf7d0{% else %}#f8c4be{% endif %}; border-radius: 8px; padding: 14px;">
+                        <h3 style="font-size: 12px; font-weight: 800; color: {% if arithmetic_valid %}#166534{% else %}#991b1b{% endif %}; margin: 0 0 4px;">
+                            {% if arithmetic_valid %}✓ Financial Calculation Verified{% else %}⚠ Arithmetic Mismatch Detected{% endif %}
+                        </h3>
+                        <p style="font-size: 12px; margin: 0; color: {% if arithmetic_valid %}#15803d{% else %}#b91c1c{% endif %}; font-weight: 500;">
+                            {% if arithmetic_valid %}
+                                Subtotal (₹{{ "{:,.2f}".format(document.analysis.subtotal_amount or 0.0) }}) + Tax (₹{{ "{:,.2f}".format(document.analysis.tax_amount or 0.0) }}) equals Total (₹{{ "{:,.2f}".format(document.analysis.total_amount or 0.0) }}).
+                            {% else %}
+                                Subtotal + Tax differs from Total by ₹{{ "{:,.2f}".format(arithmetic_diff) }}. Manual review recommended.
+                            {% endif %}
+                        </p>
+                    </div>
+                {% else %}
+                    <p style="color: var(--muted); font-size: 13px;">No financial metrics available.</p>
+                {% endif %}
+            </article>
+        </div>
+
+        <!-- TAB 3: RISKS & ANOMALIES -->
+        <div id="tab-risks" class="tab-pane">
+            <article class="card" style="padding: 24px;">
+                <h2 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 16px;">Risk Signals & Audit Findings</h2>
+                
+                {% if anomalies %}
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        {% for anom in anomalies %}
+                            <div style="background: white; border: 1px solid var(--line); border-radius: 8px; padding: 14px; border-left: 4px solid {% if anom.severity == 'CRITICAL' or anom.severity == 'HIGH' %}var(--red){% elif anom.severity == 'MEDIUM' %}#d89d33{% else %}var(--blue){% endif %};">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                                    <span class="pill {% if anom.severity == 'CRITICAL' or anom.severity == 'HIGH' %}{% elif anom.severity == 'MEDIUM' %}mid{% else %}status{% endif %}" style="font-size: 9.5px; font-weight: 800;">
+                                        {{ anom.severity }} SEVERITY
+                                    </span>
+                                    <small style="color: var(--muted); font-size: 11px;">Signal Type: {{ anom.anomaly_type }}</small>
+                                </div>
+                                <b style="font-size: 14px; color: var(--ink); display: block; margin-bottom: 4px;">{{ anom.title }}</b>
+                                <p style="color: var(--muted); font-size: 12.5px; line-height: 1.5; margin: 0 0 8px;">{{ anom.description }}</p>
+                                <div style="font-size: 11.5px; color: var(--blue); font-weight: 700;">
+                                    Recommended Action: {{ anom.recommended_review_action }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div style="background: #e7f9f2; border: 1px solid #a3e6cd; border-radius: 8px; padding: 14px; color: #177e61; font-size: 13px; font-weight: 600;">
+                        ✓ Zero risk anomalies or compliance issues detected for this document.
+                    </div>
+                {% endif %}
+            </article>
+        </div>
+
+        <!-- TAB 4: EVIDENCE -->
+        <div id="tab-evidence" class="tab-pane">
+            <article class="card" style="padding: 24px;">
+                <h2 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 16px;">Extracted Provenance & Evidence Records</h2>
+                
+                {% if evidence_items %}
+                    <div style="overflow-x: auto; margin-bottom: 20px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
+                            <thead>
+                                <tr style="background: var(--bg); border-bottom: 1px solid var(--line); text-align: left; color: var(--muted);">
+                                    <th style="padding: 8px 12px;">FIELD</th>
+                                    <th style="padding: 8px 12px;">EXTRACTED VALUE</th>
+                                    <th style="padding: 8px 12px;">CONFIDENCE</th>
+                                    <th style="padding: 8px 12px;">STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in evidence_items %}
+                                    <tr style="border-bottom: 1px solid var(--line);">
+                                        <td style="padding: 10px 12px; font-weight: 600; color: var(--muted);">{{ item.field }}</td>
+                                        <td style="padding: 10px 12px; font-weight: 700; color: var(--ink);">{{ item.value }}</td>
+                                        <td style="padding: 10px 12px; font-weight: 600;">{{ (item.confidence * 100) | round | int }}%</td>
+                                        <td style="padding: 10px 12px;">
+                                            {% if item.verified %}
+                                                <span style="color: #177e61; font-weight: 700; font-size: 11px;">✓ Verified</span>
+                                            {% else %}
+                                                <span style="color: #bd4034; font-weight: 700; font-size: 11px;">⚠ Missing/Unverified</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+
+                {% if formatted_text %}
+                    <details style="cursor: pointer;">
+                        <summary style="font-size: 13px; font-weight: 750; color: var(--ink); outline: none;">
+                            View Raw Extracted OCR Character Stream
+                        </summary>
+                        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
+                            <pre style="max-height: 240px; overflow-y: auto; background: var(--bg); padding: 12px; border-radius: 6px; font-size: 11.5px;">{{ formatted_text }}</pre>
+                        </div>
+                    </details>
+                {% endif %}
+            </article>
+        </div>
+
+        <!-- TAB 5: DOCUMENT PREVIEW -->
+        <div id="tab-preview" class="tab-pane">
+            <article class="card document-viewer" style="display: flex; flex-direction: column; min-width: 0; overflow: hidden; height: 720px; padding: 16px;">
+                <div class="cardhead" style="margin-bottom: 12px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin: 0;">Original Document Preview</h2>
+                    
+                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                        <button class="smallbtn" id="zoomOut" title="Zoom Out">−</button>
+                        <button class="smallbtn" id="zoomLevel" style="min-width: 48px; pointer-events: none;">100%</button>
+                        <button class="smallbtn" id="zoomIn" title="Zoom In">＋</button>
+                        
+                        {% if is_pdf %}
+                            <span style="color: var(--muted); font-size: 11px; margin-left: 10px; margin-right: 4px;">Page:</span>
+                            <button class="smallbtn" id="prevPage" title="Prev Page">&lsaquo;</button>
+                            <span class="small fw-semibold" style="font-size: 12px; margin: 0 4px;"><span id="pageNum">1</span>/<span id="pageCount">?</span></span>
+                            <button class="smallbtn" id="nextPage" title="Next Page">&rsaquo;</button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Preview Viewport -->
+                <div class="document-viewport" id="viewerContainer" style="height: 640px; overflow: auto; background: #e8edf4; display: flex; justify-content: center; align-items: flex-start; border-radius: 8px; position: relative;">
+                    <!-- Loading Status overlay -->
+                    <div id="loadingOverlay" style="position: absolute; inset: 0; background: rgba(255, 255, 255, 0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10;">
+                        <div style="font-size: 24px; color: var(--blue); animation: spin 1s infinite linear; margin-bottom: 10px;">⏳</div>
+                        <b style="color: var(--ink); font-size: 13px;">Rendering preview...</b>
+                    </div>
+                    
+                    <!-- Error fallback overlay -->
+                    <div id="errorOverlay" style="position: absolute; inset: 0; background: #e8edf4; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 20px; text-align: center;">
+                        <div style="font-size: 32px; color: var(--red); margin-bottom: 10px;">⚠️</div>
+                        <h5 style="color: var(--ink); font-size: 14px; font-weight: 800; margin: 0 0 4px;">Inline preview not available</h5>
+                        <p style="color: var(--muted); font-size: 12px; max-width: 250px; margin: 0 0 16px;">We cannot render this file type directly in the browser canvas.</p>
+                        <a href="{{ url_for('documents.download', id=document.id) }}" class="primary" style="text-decoration: none;">Download File</a>
+                    </div>
+                    
+                    <!-- Canvas wrapper -->
+                    <div id="documentCanvasWrapper" style="background: white; border-radius: 4px; display: inline-block; margin: auto;">
+                        {% if is_pdf %}
+                            <canvas id="pdfCanvas" class="pdf-render-canvas" style="display: block;"></canvas>
+                        {% elif is_image %}
+                            <img id="imagePreview" src="{{ url_for('documents.preview', id=document.id) }}" alt="Preview" style="display: block; height: auto;" onload="document.getElementById('loadingOverlay').style.display='none';">
+                        {% elif is_docx %}
+                            <div id="docxPreview" style="text-align: left; padding: 30px; background: white; width: 750px; font-family: sans-serif; font-size: 13px; line-height: 1.5; box-shadow: 0 8px 24px rgba(0,0,0,0.08);">
+                                {{ docx_html | safe }}
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', () => {
+                                    const loader = document.getElementById('loadingOverlay');
+                                    if(loader) loader.style.display = 'none';
+                                });
+                            </script>
+                        {% else %}
+                            <script>
+                                document.addEventListener('DOMContentLoaded', () => {
+                                    document.getElementById('loadingOverlay').style.display = 'none';
+                                    document.getElementById('errorOverlay').style.display = 'flex';
+                                });
+                            </script>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <!-- Right Sidebar: Quick Actions & Intelligence Operations -->
+    <aside class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+        <h3 style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin: 0 0 4px;">Document Operations</h3>
+
+        <a href="{{ url_for('documents.download', id=document.id) }}" class="primary" style="text-decoration: none; width: 100%; text-align: center; display: inline-block; padding: 10px 0; font-size: 13px; font-weight: 700;">
+            ⬇ &nbsp; Download Original File
+        </a>
+
+        {% if document.status == 'processed' %}
+            <form action="{{ url_for('documents.analyze', id=document.id) }}" method="POST" style="margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="secondary" style="width: 100%; font-size: 13px; font-weight: 700; padding: 10px 0;">
+                    🔄 &nbsp; Re-analyze Financials
+                </button>
+            </form>
+
+            {% if document.analysis and document.analysis.raw_text %}
+                <a href="{{ url_for('documents.download_text', id=document.id) }}" class="secondary" style="text-decoration: none; width: 100%; text-align: center; display: inline-block; padding: 10px 0; font-size: 13px; font-weight: 700;">
+                    📝 &nbsp; Export OCR Text (.txt)
+                </a>
+            {% endif %}
+
+            <a href="/assistant" class="secondary" style="text-decoration: none; width: 100%; text-align: center; display: inline-block; padding: 10px 0; font-size: 13px; font-weight: 700; color: var(--blue); border-color: #adc5ef;">
+                ✦ &nbsp; Ask AI Assistant
+            </a>
+        {% endif %}
+
+        <hr style="border: 0; border-top: 1px solid var(--line); margin: 4px 0;">
+
+        <button type="button" class="secondary" style="color: var(--red); border-color: var(--red); font-size: 13px; font-weight: 700; padding: 10px 0; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;" data-bs-toggle="modal" data-bs-target="#deleteModal" data-doc-id="{{ document.id }}" data-doc-name="{{ document.original_filename }}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Delete Document
+        </button>
+    </aside>
+</div>
+
+<style>
+    .tab-btn {
+        background: none;
+        border: none;
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s ease;
+    }
+    .tab-btn:hover {
+        color: var(--ink);
+    }
+    .tab-btn.active {
+        color: var(--blue);
+        border-bottom-color: var(--blue);
+    }
+    .tab-pane {
+        display: none;
+    }
+    .tab-pane.active {
+        display: block;
+    }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+<script>
+    function switchTab(evt, tabId) {
+        evt.preventDefault();
+        const panes = document.querySelectorAll('.tab-pane');
+        panes.forEach(p => p.classList.remove('active'));
+        const btns = document.querySelectorAll('.tab-btn');
+        btns.forEach(b => b.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+</script>
+{% endblock %}
+
+{% block scripts %}
+{% if is_pdf %}
+    <!-- PDF.js core library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+{% endif %}
+<script src="{{ url_for('static', filename='js/document_viewer.js') }}"></script>
 {% endblock %}

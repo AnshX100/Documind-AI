@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — FinPilot AI{% endblock %}
+
+{% block content %}
+<header class="top">
+    <div>
+        <p class="eyebrow">USER PROFILE</p>
+        <h1>Profile Settings</h1>
+        <p>Manage your account credentials and personal details.</p>
+    </div>
+</header>
+
+<div class="grid two">
+    <!-- Edit Profile Card -->
+    <article class="card">
+        <h2>Profile Information</h2>
+        <form method="POST" action="">
+            {{ profile_form.hidden_tag() }}
+            
+            <div style="margin-bottom: 16px;">
+                <label for="profile-full_name" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--muted);">FULL NAME</label>
+                {{ profile_form.full_name(id="profile-full_name", class="search", style="width: 100%; font: inherit;") }}
+                {% for error in profile_form.full_name.errors %}
+                    <small style="color: var(--red); font-weight: 700; display: block; margin-top: 4px;">{{ error }}</small>
+                {% endfor %}
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label for="profile-username" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--muted);">USERNAME</label>
+                {{ profile_form.username(id="profile-username", class="search", style="width: 100%; font: inherit;") }}
+                {% for error in profile_form.username.errors %}
+                    <small style="color: var(--red); font-weight: 700; display: block; margin-top: 4px;">{{ error }}</small>
+                {% endfor %}
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <label for="profile-email" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--muted);">EMAIL ADDRESS</label>
+                {{ profile_form.email(id="profile-email", class="search", style="width: 100%; font: inherit;") }}
+                {% for error in profile_form.email.errors %}
+                    <small style="color: var(--red); font-weight: 700; display: block; margin-top: 4px;">{{ error }}</small>
+                {% endfor %}
+            </div>
+
+            <button type="submit" name="profile-submit" value="1" class="primary" style="width: 100%;">
+                Update Profile
+            </button>
+        </form>
+    </article>
+
+    <!-- Change Password Card -->
+    <article class="card">
+        <h2>Change Password</h2>
+        <form method="POST" action="">
+            {{ password_form.hidden_tag() }}
+
+            <div style="margin-bottom: 16px;">
+                <label for="password-current_password" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--muted);">CURRENT PASSWORD</label>
+                {{ password_form.current_password(id="password-current_password", class="search", style="width: 100%; font: inherit;") }}
+                {% for error in password_form.current_password.errors %}
+                    <small style="color: var(--red); font-weight: 700; display: block; margin-top: 4px;">{{ error }}</small>
+                {% endfor %}
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label for="password-new_password" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--muted);">NEW PASSWORD (MIN 8 CHARACTERS)</label>
+                {{ password_form.new_password(id="password-new_password", class="search", style="width: 100%; font: inherit;") }}
+                {% for error in password_form.new_password.errors %}
+                    <small style="color: var(--red); font-weight: 700; display: block; margin-top: 4px;">{{ error }}</small>
+                {% endfor %}
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <label for="password-confirm_password" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--muted);">CONFIRM NEW PASSWORD</label>
+                {{ password_form.confirm_password(id="password-confirm_password", class="search", style="width: 100%; font: inherit;") }}
+                {% for error in password_form.confirm_password.errors %}
+                    <small style="color: var(--red); font-weight: 700; display: block; margin-top: 4px;">{{ error }}</small>
+                {% endfor %}
+            </div>
+
+            <button type="submit" name="password-submit" value="1" class="primary" style="width: 100%;">
+                Change Password
+            </button>
+        </form>
+    </article>
+</div>
+
+<!-- Account metadata summary -->
+<div class="card" style="margin-top: 16px;">
+    <h2>Account Records</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+        <div>
+            <span style="font-size: 10px; color: var(--muted); font-weight: 700; letter-spacing: .7px; display: block; margin-bottom: 4px;">ACCOUNT ROLE</span>
+            <strong style="font-size: 15px; text-transform: uppercase;">{{ current_user.role }}</strong>
+        </div>
+        <div>
+            <span style="font-size: 10px; color: var(--muted); font-weight: 700; letter-spacing: .7px; display: block; margin-bottom: 4px;">WORKSPACE STATUS</span>
+            <strong style="font-size: 15px; color: #177e61;">ACTIVE</strong>
+        </div>
+        <div>
+            <span style="font-size: 10px; color: var(--muted); font-weight: 700; letter-spacing: .7px; display: block; margin-bottom: 4px;">CREATION DATE</span>
+            <strong style="font-size: 15px;">{{ current_user.created_at.strftime('%Y-%m-%d') }}</strong>
+        </div>
+    </div>
+</div>
+{% endblock %}

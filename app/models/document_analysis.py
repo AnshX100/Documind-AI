@@ -1,6 +1,6 @@
 """DocumentAnalysis ORM Model mapping to 'document_analysis' database table."""
 
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import TYPE_CHECKING
 from app.extensions import db
 
@@ -20,7 +20,8 @@ class DocumentAnalysis(db.Model):
         nullable=False,
         unique=True
     )
-    raw_text = db.Column(db.Text, nullable=True)
+    from sqlalchemy.dialects.mysql import LONGTEXT
+    raw_text = db.Column(db.Text().with_variant(LONGTEXT, "mysql"), nullable=True)
     vendor_name = db.Column(db.String(200), nullable=True, index=True)
     invoice_number = db.Column(db.String(100), nullable=True)
     invoice_date = db.Column(db.Date, nullable=True, index=True)
@@ -41,12 +42,12 @@ class DocumentAnalysis(db.Model):
     payment_method = db.Column(db.String(50), nullable=True, default="Unknown")
     ai_summary = db.Column(db.Text, nullable=True)
     confidence_score = db.Column(db.Float, nullable=False, default=0.0)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(
         db.DateTime,
         nullable=False,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc)
     )
 
     # Relationships

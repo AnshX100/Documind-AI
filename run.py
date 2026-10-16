@@ -1,4 +1,9 @@
-"""Main entry point for running the DocuMind AI application."""
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Ensure .env is loaded for local execution entrypoint
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(dotenv_path=BASE_DIR / ".env")
 
 from app import create_app
 from app.extensions import db

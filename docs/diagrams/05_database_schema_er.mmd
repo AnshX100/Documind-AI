@@ -1,0 +1,57 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#ffffff', 'primaryColor': '#ffffff', 'primaryBorderColor': '#2563eb', 'primaryTextColor': '#0f172a', 'lineColor': '#475569'}}}%%
+erDiagram
+    USERS ||--o{ DOCUMENTS : "owns"
+    USERS ||--o{ REPORTS : "generates"
+    USERS ||--o{ CHAT_HISTORIES : "records"
+    DOCUMENTS ||--o| DOCUMENT_ANALYSES : "evaluated_by"
+
+    USERS {
+        int id PK
+        varchar(120) email UK
+        varchar(255) password_hash
+        varchar(50) role
+        varchar(255) google_sub UK
+        datetime created_at
+    }
+
+    DOCUMENTS {
+        int id PK
+        int user_id FK
+        varchar(255) filename
+        varchar(255) original_filename
+        varchar(500) file_path
+        varchar(255) file_type
+        bigint file_size
+        varchar(50) status
+        datetime created_at
+    }
+
+    DOCUMENT_ANALYSES {
+        int id PK
+        int document_id FK,UK
+        json extracted_data
+        json metrics
+        json anomalies
+        float confidence_score
+        datetime updated_at
+    }
+
+    REPORTS {
+        int id PK
+        int user_id FK
+        varchar(255) title
+        varchar(100) report_type
+        json summary_data
+        varchar(500) file_path
+        datetime created_at
+    }
+
+    CHAT_HISTORIES {
+        int id PK
+        int user_id FK
+        varchar(100) session_id
+        varchar(20) role
+        text message
+        json evidence_metadata
+        datetime created_at
+    }

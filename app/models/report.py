@@ -1,6 +1,6 @@
 """Report ORM Model mapping to 'reports' database table."""
 
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import TYPE_CHECKING
 from app.extensions import db
 
@@ -28,15 +28,23 @@ class Report(db.Model):
     total_documents = db.Column(db.Integer, nullable=False, default=0)
     file_path = db.Column(db.String(500), nullable=True)
     format = db.Column(db.String(10), nullable=False, default="pdf")
+    status = db.Column(db.String(20), nullable=False, default="completed")
     created_at = db.Column(
         db.DateTime,
         nullable=False,
-        default=datetime.utcnow,
+        default=lambda: datetime.now(timezone.utc),
         index=True
+    )
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc)
     )
 
     # Relationships
     user = db.relationship("User", back_populates="reports")
 
     def __repr__(self) -> str:
-        return f"<Report id={self.id} name='{self.report_name}' format='{self.format}'>"
+        return f"<Report id={self.id} name='{self.report_name}' status='{self.status}' format='{self.format}'>"
+

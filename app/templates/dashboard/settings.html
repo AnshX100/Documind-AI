@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Settings — FinPilot AI{% endblock %}
+
+{% block content %}
+<header class="top">
+    <div>
+        <p class="eyebrow">PREFERENCES</p>
+        <h1>Workspace Settings</h1>
+        <p>Configure dashboard behavior, viewer states, and visual animations.</p>
+    </div>
+</header>
+
+<div class="grid two">
+    <!-- Visual Preferences Card -->
+    <article class="card">
+        <h2>Visual & Animation Preferences</h2>
+        <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div style="margin-bottom: 20px;">
+                <label for="reduced_motion" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--muted);">REDUCED MOTION PREFERENCE</label>
+                <select name="reduced_motion" id="reduced_motion" class="search" style="width: 100%; font: inherit; background: white;">
+                    <option value="false" {% if settings.reduced_motion == 'false' %}selected{% endif %}>Disabled (Standard Animations)</option>
+                    <option value="true" {% if settings.reduced_motion == 'true' %}selected{% endif %}>Enabled (No Animations)</option>
+                </select>
+                <p style="font-size: 11px; color: var(--muted); margin: 6px 0 0 0;">Forces all number counter and chart growth animations to skip transitions and render final values instantly.</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="dashboard_animation" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--muted);">DASHBOARD GROWTH ANIMATION</label>
+                <select name="dashboard_animation" id="dashboard_animation" class="search" style="width: 100%; font: inherit; background: white;">
+                    <option value="true" {% if settings.dashboard_animation == 'true' %}selected{% endif %}>Enabled (Counters and Graphs growth)</option>
+                    <option value="false" {% if settings.dashboard_animation == 'false' %}selected{% endif %}>Disabled (Static Render)</option>
+                </select>
+                <p style="font-size: 11px; color: var(--muted); margin: 6px 0 0 0;">Configures whether stats count upward dynamically when loading the main page.</p>
+            </div>
+
+            <button type="submit" class="primary" style="width: 100%;">
+                Save Settings
+            </button>
+        </form>
+    </article>
+
+    <!-- Document Preferences Card -->
+    <article class="card">
+        <h2>Document Viewer & Workspace</h2>
+        <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div style="margin-bottom: 20px;">
+                <label for="default_ocr_pref" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--muted);">DEFAULT OCR DISPLAY PREFERENCE</label>
+                <select name="default_ocr_pref" id="default_ocr_pref" class="search" style="width: 100%; font: inherit; background: white;">
+                    <option value="formatted" {% if settings.default_ocr_pref == 'formatted' %}selected{% endif %}>Formatted Text (Structure preserved)</option>
+                    <option value="raw" {% if settings.default_ocr_pref == 'raw' %}selected{% endif %}>Raw OCR Output (Line by line)</option>
+                </select>
+                <p style="font-size: 11px; color: var(--muted); margin: 6px 0 0 0;">Sets the initially selected tab at the bottom of the Document Review details workspace.</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="theme" style="display: block; font-weight: 700; margin-bottom: 6px; font-size: 12px; color: var(--muted);">APPLICATION THEME</label>
+                <select name="theme" id="theme" class="search" style="width: 100%; font: inherit; background: white;">
+                    <option value="light" {% if settings.theme == 'light' %}selected{% endif %}>Standard Theme (Soft Grey & Navy)</option>
+                    <option value="dark" {% if settings.theme == 'dark' %}selected{% endif %} disabled>Dark Mode (Coming in Version 2)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="primary" style="width: 100%;">
+                Save Settings
+            </button>
+        </form>
+    </article>
+</div>
+
+<!-- Preferences list section links -->
+<div class="card" style="margin-top: 16px;">
+    <h2>Workspace Connections</h2>
+    <div style="font-size: 12px; display: flex; flex-direction: column; gap: 10px;">
+        <div>
+            <strong>Profile Information:</strong> Manage name, username and email in the <a href="/profile" style="color: var(--blue); font-weight: 700; text-decoration: underline;">Profile Page</a>.
+        </div>
+        <div>
+            <strong>Workspace Security:</strong> Update account password and security tokens under Profile Settings.
+        </div>
+    </div>
+</div>
+{% endblock %}

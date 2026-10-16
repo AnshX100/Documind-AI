@@ -2,7 +2,7 @@
 
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
@@ -49,6 +49,51 @@ class StorageService:
         if file_size > self.max_content_length:
             return False, f"File is too large. Maximum size is {self.max_content_length // (1024*1024)}MB."
 
+        # Deep Content & Signature Validation
+        ext = self.get_extension(file.filename)
+        header = file.read(4096)
+        file.seek(0, os.SEEK_SET)
+
+        if ext == "pdf":
+            if not header.startswith(b"%PDF-"):
+                return False, "Invalid file content. Uploaded file is not a valid PDF document."
+        elif ext == "png":
+            if not header.startswith(b"\x89PNG\r\n\x1a\n"):
+                return False, "Invalid file content. Uploaded file is not a valid PNG image."
+        elif ext in ["jpg", "jpeg"]:
+            if not header.startswith(b"\xff\xd8\xff"):
+                return False, "Invalid file content. Uploaded file is not a valid JPEG image."
+        elif ext == "webp":
+            if not (header.startswith(b"RIFF") and header[8:12] == b"WEBP"):
+                return False, "Invalid file content. Uploaded file is not a valid WEBP image."
+        elif ext == "docx":
+            if not header.startswith(b"PK\x03\x04"):
+                return False, "Invalid file content. Uploaded file is not a valid DOCX document."
+            import zipfile
+            try:
+                with zipfile.ZipFile(file) as zf:
+                    if zf.testzip() is not None:
+                        file.seek(0, os.SEEK_SET)
+                        return False, "Invalid file content. Corrupted or unreadable DOCX archive."
+                    namelist = zf.namelist()
+                    if "[Content_Types].xml" not in namelist or "word/document.xml" not in namelist:
+                        file.seek(0, os.SEEK_SET)
+                        return False, "Invalid file content. The uploaded ZIP file lacks standard DOCX package structure."
+            except zipfile.BadZipFile:
+                file.seek(0, os.SEEK_SET)
+                return False, "Invalid file content. Malformed or corrupted DOCX archive."
+            except RuntimeError as re:
+                if "encrypted" in str(re).lower() or "password" in str(re).lower():
+                    file.seek(0, os.SEEK_SET)
+                    return False, "Invalid file content. Encrypted DOCX files are not supported."
+                file.seek(0, os.SEEK_SET)
+                return False, "Invalid file content. Unable to process DOCX file."
+            except Exception:
+                file.seek(0, os.SEEK_SET)
+                return False, "Invalid file content. Uploaded file is not a valid DOCX document."
+            finally:
+                file.seek(0, os.SEEK_SET)
+
         return True, ""
 
     def save_file(self, file: FileStorage, user_id: int) -> tuple[str, str, int]:
@@ -68,9 +113,21 @@ class StorageService:
         if not is_valid:
             raise ValueError(error_msg)
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         extension = self.get_extension(file.filename or "")
         file_type = file.mimetype or "application/octet-stream"
+        
+        # Normalize file_type for standard handling
+        if extension == "docx":
+            file_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        elif extension == "pdf":
+            file_type = "application/pdf"
+        elif extension in ["jpg", "jpeg"]:
+            file_type = "image/jpeg"
+        elif extension == "png":
+            file_type = "image/png"
+        elif extension == "webp":
+            file_type = "image/webp"
         
         # Determine file size
         file.seek(0, os.SEEK_END)

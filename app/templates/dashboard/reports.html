@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Reports — FinPilot AI{% endblock %}
+
+{% block content %}
+<header class="top" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px;">
+    <div>
+        <p class="eyebrow">FINANCIAL INTELLIGENCE</p>
+        <h1>Financial Reports</h1>
+        <p>Compile and download audit-ready PDF reports from verified document evidence.</p>
+    </div>
+    <button type="button" class="primary" id="btnOpenCreateReportModal" style="padding: 10px 18px; font-weight: 700;">
+        + Generate New Report
+    </button>
+</header>
+
+<!-- Main Grid Layout -->
+<div class="grid two reports-grid" style="gap: 24px; margin-top: 20px;">
+    
+    <!-- Generated Reports List (Left) -->
+    <article class="card" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 style="margin: 0; font-size: 16px;">Generated Reports History</h2>
+            <span style="font-size: 12px; color: var(--muted); font-weight: 600;">{{ reports|length if reports else 0 }} compiled</span>
+        </div>
+
+        {% if reports and reports|length > 0 %}
+        <div class="table-responsive">
+            <table class="table" style="font-size: 13px;">
+                <thead>
+                    <tr>
+                        <th>Report Title</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Expenses</th>
+                        <th>Docs</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('placeholders.report_detail', report_id=report.id) }}" style="color: var(--ink); text-decoration: none; font-weight: 600;">
+                                {{ report.report_name }}
+                            </a>
+                            <div style="font-weight: 400; font-size: 11.5px; color: var(--muted); margin-top: 2px;">
+                                {{ report.created_at.strftime('%d %b %Y, %H:%M UTC') }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status" style="font-size: 11px; background: rgba(37, 99, 235, 0.08); color: var(--brand-primary); padding: 3px 8px; border-radius: var(--radius-sm); font-weight: 600;">
+                                {{ report.report_type }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if report.status == 'completed' %}
+                                <span style="color: var(--emerald); font-weight: 700; font-size: 12px;">✓ Completed</span>
+                            {% elif report.status == 'generating' or report.status == 'pending' %}
+                                <span style="color: var(--brand-primary); font-weight: 700; font-size: 12px;">⏳ Generating</span>
+                            {% else %}
+                                <span style="color: var(--red); font-weight: 700; font-size: 12px;">✖ Failed</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-weight: 700; color: var(--ink);">
+                            ₹{{ "{:,.2f}".format(report.total_expenses or 0.0) }}
+                        </td>
+                        <td style="color: var(--muted);">
+                            {{ report.total_documents or 0 }}
+                        </td>
+                        <td style="text-align: right; white-space: nowrap;">
+                            {% if report.status == 'completed' %}
+                            <a href="{{ url_for('placeholders.download_report', report_id=report.id) }}" class="primary smallbtn" style="text-decoration: none; margin-right: 4px; display: inline-block;">
+                                ⬇ PDF
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('placeholders.report_detail', report_id=report.id) }}" class="secondary smallbtn" style="text-decoration: none; margin-right: 4px; display: inline-block;">
+                                View
+                            </a>
+                            <form action="{{ url_for('placeholders.delete_report', report_id=report.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this report?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                                <button type="submit" style="background: none; border: none; color: var(--red); cursor: pointer; font-size: 12px; font-weight: 600; padding: 5px 6px;">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 48px 16px;">
+            <div style="font-size: 32px; margin-bottom: 12px; color: var(--brand-primary);">📊</div>
+            <h3 style="margin: 0 0 6px 0; color: var(--ink); font-weight: 700;">No reports compiled yet</h3>
+            <p style="color: var(--muted); font-size: 13px; max-width: 360px; margin: 0 auto 20px;">
+                Select a report template to compile an executive summary, spending analysis, anomaly audit, or due diligence report.
+            </p>
+            <button type="button" class="primary btn-open-modal-trigger" style="padding: 10px 18px; font-size: 13px; font-weight: 700;">
+                + Compile Your First Report
+            </button>
+        </div>
+        {% endif %}
+    </article>
+
+    <!-- Quick Report Templates (Right) -->
+    <article class="card" style="padding: 24px;">
+        <h2 style="font-size: 16px; margin-top: 0; margin-bottom: 16px;">Report Templates</h2>
+        
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div class="issue" style="margin: 0; padding: 14px; background: var(--surface-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+                <span class="status" style="background: var(--navy); color: #67e8f9; font-weight: 700; font-size: 10px;">EXECUTIVE</span>
+                <div style="margin-top: 6px;">
+                    <b style="font-size: 13px;">Executive Summary</b><br>
+                    <small style="color: var(--muted); font-size: 12px; display: block; margin-top: 3px;">High-level overview of total spend, key categories, top vendors, and audit health.</small>
+                    <button type="button" class="link btn-preset-report" data-type="EXECUTIVE" style="margin-top: 8px; font-size: 12px; border: none; background: none; color: var(--brand-primary); cursor: pointer; padding: 0; font-weight: 700;">Compile Executive Report →</button>
+                </div>
+            </div>
+
+            <div class="issue" style="margin: 0; padding: 14px; background: var(--surface-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+                <span class="status" style="background: var(--navy); color: #67e8f9; font-weight: 700; font-size: 10px;">SPENDING</span>
+                <div style="margin-top: 6px;">
+                    <b style="font-size: 13px;">Spending Analysis</b><br>
+                    <small style="color: var(--muted); font-size: 12px; display: block; margin-top: 3px;">Category breakdowns, vendor concentration, and monthly spending trends.</small>
+                    <button type="button" class="link btn-preset-report" data-type="SPENDING" style="margin-top: 8px; font-size: 12px; border: none; background: none; color: var(--brand-primary); cursor: pointer; padding: 0; font-weight: 700;">Compile Spending Report →</button>
+                </div>
+            </div>
+
+            <div class="issue" style="margin: 0; padding: 14px; background: var(--surface-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+                <span class="status" style="background: var(--navy); color: #67e8f9; font-weight: 700; font-size: 10px;">ANOMALY</span>
+                <div style="margin-top: 6px;">
+                    <b style="font-size: 13px;">Anomaly & Risk Audit</b><br>
+                    <small style="color: var(--muted); font-size: 12px; display: block; margin-top: 3px;">Detailed finding sheets for duplicate invoices, unusual amounts, and spikes.</small>
+                    <button type="button" class="link btn-preset-report" data-type="ANOMALY" style="margin-top: 8px; font-size: 12px; border: none; background: none; color: var(--brand-primary); cursor: pointer; padding: 0; font-weight: 700;">Compile Anomaly Report →</button>
+                </div>
+            </div>
+
+            <div class="issue" style="margin: 0; padding: 14px; background: var(--surface-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+                <span class="status" style="background: var(--navy); color: #67e8f9; font-weight: 700; font-size: 10px;">FULL AUDIT</span>
+                <div style="margin-top: 6px;">
+                    <b style="font-size: 13px;">Comprehensive Report</b><br>
+                    <small style="color: var(--muted); font-size: 12px; display: block; margin-top: 3px;">Combines Executive, Spending, Risk, Due Diligence, and Source Documents.</small>
+                    <button type="button" class="link btn-preset-report" data-type="COMPREHENSIVE" style="margin-top: 8px; font-size: 12px; border: none; background: none; color: var(--brand-primary); cursor: pointer; padding: 0; font-weight: 700;">Compile Comprehensive Report →</button>
+                </div>
+            </div>
+        </div>
+    </article>
+</div>
+
+<!-- Modal Dialog: Create Report -->
+<div id="reportModalBackdrop" style="display: none; position: fixed; inset: 0; background: rgba(14, 23, 38, 0.6); backdrop-filter: blur(4px); z-index: 9999;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(520px, calc(100% - 32px)); background: var(--surface); border-radius: var(--radius-lg); padding: 28px; box-shadow: var(--shadow-lg); border: 1px solid var(--border);">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; font-size: 18px; color: var(--ink);">Generate Financial Report</h2>
+            <button type="button" id="btnCloseReportModal" style="background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer;">&times;</button>
+        </div>
+
+        <form action="{{ url_for('placeholders.create_report') }}" method="POST" id="createReportForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 6px;">
+                    REPORT TYPE
+                </label>
+                <select name="report_type" id="modalReportType" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; background: var(--surface); color: var(--ink);" required>
+                    <option value="EXECUTIVE">Executive Financial Summary</option>
+                    <option value="SPENDING">Spending Analysis Report</option>
+                    <option value="ANOMALY">Anomaly & Risk Report</option>
+                    <option value="DUE_DILIGENCE">Due Diligence Report</option>
+                    <option value="COMPREHENSIVE">Comprehensive Financial Report</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 6px;">
+                    REPORTING PERIOD
+                </label>
+                <select name="period" id="modalReportPeriod" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; background: var(--surface); color: var(--ink);" required>
+                    <option value="all_time">All Time (Full Workspace History)</option>
+                    <option value="current_month">Current Month</option>
+                    <option value="previous_month">Previous Month</option>
+                    <option value="current_quarter">Current Quarter</option>
+                    <option value="previous_quarter">Previous Quarter</option>
+                    <option value="current_year">Current Year</option>
+                    <option value="previous_year">Previous Year</option>
+                    <option value="custom">Custom Date Range...</option>
+                </select>
+            </div>
+
+            <div id="customDateRangeBox" style="display: none; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; background: var(--surface-subtle); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 4px;">START DATE</label>
+                    <input type="date" name="start_date" id="modalStartDate" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 4px;">END DATE</label>
+                    <input type="date" name="end_date" id="modalEndDate" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px;">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 6px;">
+                    REPORT TITLE (OPTIONAL)
+                </label>
+                <input type="text" name="report_title" id="modalReportTitle" placeholder="e.g. Q3 2026 Executive Financial Report" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" id="btnCancelReportModal" class="secondary" style="padding: 10px 16px;">Cancel</button>
+                <button type="submit" id="btnSubmitReport" class="primary" style="padding: 10px 20px; font-weight: 700;">Compile PDF Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const modalBackdrop = document.getElementById('reportModalBackdrop');
+        const btnOpen = document.getElementById('btnOpenCreateReportModal');
+        const btnClose = document.getElementById('btnCloseReportModal');
+        const btnCancel = document.getElementById('btnCancelReportModal');
+        const selectPeriod = document.getElementById('modalReportPeriod');
+        const customDateBox = document.getElementById('customDateRangeBox');
+        const selectType = document.getElementById('modalReportType');
+        const inputTitle = document.getElementById('modalReportTitle');
+        const createReportForm = document.getElementById('createReportForm');
+        const btnSubmitReport = document.getElementById('btnSubmitReport');
+        let isSubmitting = false;
+
+        const openModal = (type = 'EXECUTIVE') => {
+            if (selectType) selectType.value = type;
+            if (modalBackdrop) modalBackdrop.style.display = 'block';
+        };
+
+        const closeModal = () => {
+            if (modalBackdrop) modalBackdrop.style.display = 'none';
+            if (createReportForm && !isSubmitting) {
+                // Reset form state cleanly
+                createReportForm.reset();
+                if (customDateBox) customDateBox.style.display = 'none';
+            }
+        };
+
+        if (btnOpen) btnOpen.addEventListener('click', () => openModal());
+        document.querySelectorAll('.btn-open-modal-trigger').forEach(b => b.addEventListener('click', () => openModal()));
+        if (btnClose) btnClose.addEventListener('click', closeModal);
+        if (btnCancel) btnCancel.addEventListener('click', closeModal);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalBackdrop && modalBackdrop.style.display === 'block') {
+                closeModal();
+            }
+        });
+
+        document.querySelectorAll('.btn-preset-report').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.getAttribute('data-type') || 'EXECUTIVE';
+                openModal(type);
+            });
+        });
+
+        if (selectPeriod) {
+            selectPeriod.addEventListener('change', () => {
+                if (selectPeriod.value === 'custom') {
+                    customDateBox.style.display = 'grid';
+                    document.getElementById('modalStartDate')?.setAttribute('required', 'required');
+                    document.getElementById('modalEndDate')?.setAttribute('required', 'required');
+                } else {
+                    customDateBox.style.display = 'none';
+                    document.getElementById('modalStartDate')?.removeAttribute('required');
+                    document.getElementById('modalEndDate')?.removeAttribute('required');
+                }
+            });
+        }
+
+        if (createReportForm) {
+            createReportForm.addEventListener('submit', (e) => {
+                if (isSubmitting) {
+                    e.preventDefault();
+                    return false;
+                }
+                isSubmitting = true;
+                if (btnSubmitReport) {
+                    btnSubmitReport.disabled = true;
+                    btnSubmitReport.innerText = 'Compiling PDF Report...';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

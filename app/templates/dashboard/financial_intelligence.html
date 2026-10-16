@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Intelligence — FinPilot AI{% endblock %}
+
+{% block content %}
+<!-- Pre-calculated initial dashboard data JSON block for instantaneous load & animation -->
+<script id="initialDashboardData" type="application/json">
+    {
+        "metrics": {
+            "total_expenses": {{ overview.total_spending | default(0) }},
+            "average_expense": {{ overview.average_transaction | default(0) }},
+            "total_documents": {{ overview.analyzed_documents | default(0) }},
+            "high_risk_anomalies": {{ anomaly_summary.high_risk_count | default(0) }}
+        },
+        "monthly_trend": {{ monthly_trend | tojson | safe if monthly_trend else '[]' }}
+    }
+</script>
+
+<header class="top">
+    <div>
+        <p class="eyebrow">FINANCIAL INTELLIGENCE ENGINE</p>
+        <h1>Financial Intelligence</h1>
+        <p>Automated spending patterns, concentration metrics, and explainable risk signals.</p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+        <a href="{{ url_for('placeholders.reports') }}" class="secondary" style="text-decoration: none;">📄 Compile Reports</a>
+        <a href="{{ url_for('documents.upload') }}" class="primary" style="text-decoration: none;">＋ Upload document</a>
+    </div>
+
+</header>
+
+{% if overview.analyzed_documents == 0 %}
+    <!-- Empty State -->
+    <article class="card" style="text-align: center; padding: 80px 20px; border-style: dashed; border-width: 1.5px; border-color: #adc5ef; background: #f8fbff; border-radius: 12px; margin-top: 10px;">
+        <div style="font-size: 44px; color: var(--blue); margin-bottom: 14px;">📊</div>
+        <h2 style="font-size: 18px; margin-bottom: 8px;">No financial intelligence available yet</h2>
+        <p style="color: var(--muted); max-width: 460px; margin: 0 auto 24px; font-size: 13px; line-height: 1.6;">
+            Upload invoices or receipt files to generate automated spending intelligence, category breakdowns, vendor concentration analysis, and risk signals.
+        </p>
+        <a href="{{ url_for('documents.upload') }}" class="primary" style="text-decoration: none; padding: 12px 24px; font-size: 13px; font-weight: 700;">
+            Upload Your First Document
+        </a>
+    </article>
+{% else %}
+    <!-- KPI Metrics Row with Smooth requestAnimationFrame Counters -->
+    <div class="metrics">
+        <div class="metric">
+            <span>TOTAL SPENDING</span>
+            <strong id="valTotalExpenses" data-value="{{ overview.total_spending }}">₹{{ "{:,.2f}".format(overview.total_spending) }}</strong>
+            <small style="color: #229574;">Across {{ overview.analyzed_documents }} analyzed documents</small>
+        </div>
+        <div class="metric">
+            <span>AVERAGE TRANSACTION</span>
+            <strong id="valAvgTransaction" data-value="{{ overview.average_transaction }}">₹{{ "{:,.2f}".format(overview.average_transaction) }}</strong>
+            <small style="color: var(--muted);">Highest: ₹{{ "{:,.2f}".format(overview.highest_transaction.amount) }}</small>
+        </div>
+        <div class="metric">
+            <span>ANALYZED DOCUMENTS</span>
+            <strong id="valAnalyzedDocs" data-value="{{ overview.analyzed_documents }}">{{ overview.analyzed_documents }}</strong>
+            <small style="color: var(--blue);">{{ overview.invoices_count }} invoices · {{ overview.receipts_count }} receipts</small>
+        </div>
+        <div class="metric">
+            <span>FINANCIAL RISK SIGNALS</span>
+            <strong id="valRiskSignals" data-value="{{ anomaly_summary.high_risk_count }}" style="color: {% if anomaly_summary.high_risk_count > 0 %}#bd4034{% else %}#177e61{% endif %};">
+                {{ anomaly_summary.high_risk_count }}
+            </strong>
+            <small style="color: {% if anomaly_summary.high_risk_count > 0 %}#bd4034{% else %}#177e61{% endif %};">
+                {% if anomaly_summary.high_risk_count > 0 %}
+                    {{ anomaly_summary.high_risk_count }} high-risk items require review
+                {% else %}
+                    Zero high-risk items detected
+                {% endif %}
+            </small>
+        </div>
+    </div>
+
+    <!-- Section 1: Financial Observations (Explainable Insights) -->
+    {% if observations %}
+        <article class="card" style="margin-bottom: 20px;">
+            <div class="cardhead" style="margin-bottom: 12px;">
+                <h2>Financial Observations & Insights</h2>
+                <span class="status" style="font-size: 11px;">Deterministic Audit</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px;">
+                {% for obs in observations %}
+                    <div style="background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <b style="font-size: 12.5px; color: var(--ink);">{{ obs.title }}</b>
+                            {% if obs.level == 'warning' %}
+                                <span class="pill mid" style="font-size: 9px;">ATTENTION</span>
+                            {% elif obs.level == 'success' %}
+                                <span class="status" style="font-size: 9px;">HEALTHY</span>
+                            {% else %}
+                                <span class="status" style="background: #e8f0ff; color: var(--blue); font-size: 9px;">OBSERVATION</span>
+                            {% endif %}
+                        </div>
+                        <p style="font-size: 12px; color: var(--muted); margin: 0; line-height: 1.5;">
+                            {{ obs.text }}
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    {% endif %}
+
+    <!-- Section 2: Spending Trends & Category Distribution -->
+    <div class="grid two">
+        <!-- Spend Chart Card -->
+        <article class="card">
+            <div class="cardhead" style="margin-bottom: 12px;">
+                <h2>Spending Trends Over Time</h2>
+                <span style="font-size: 12px; color: var(--muted); font-weight: 600;">Monthly chronological data</span>
+            </div>
+            
+            <div class="chart" id="spendingChartContainer">
+                <svg viewBox="0 0 650 225" preserveAspectRatio="none" id="trendChartSvg">
+                    <path d="M0 225 V225 H0Z" fill="#dff8f5" id="trendChartArea" style="opacity: 0.85; transition: all 0.5s ease;"/>
+                    <polyline points="" fill="none" stroke="#3cc4b9" stroke-width="4" id="trendChartLine" style="transition: all 0.5s ease;"/>
+                </svg>
+            </div>
+
+            {% if monthly_trend %}
+                <div style="display: flex; justify-content: space-between; margin-top: 14px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px;">
+                    <span>Start: <b>{{ monthly_trend[0].month_name }}</b></span>
+                    <span>Recent: <b>{{ monthly_trend[-1].month_name }} (₹{{ "{:,.2f}".format(monthly_trend[-1].total) }})</b></span>
+                </div>
+            {% endif %}
+        </article>
+
+        <!-- Categories Card -->
+        <article class="card">
+            <h2>Spending by Category</h2>
+            <div id="categoryContainer">
+                {% if categories %}
+                    {% set max_cat_val = namespace(val=1) %}
+                    {% for cat in categories %}
+                        {% if cat.total > max_cat_val.val %}
+                            {% set max_cat_val.val = cat.total %}
+                        {% endif %}
+                    {% endfor %}
+                    {% for cat in categories %}
+                        {% set percent = ((cat.total / max_cat_val.val) * 100) | round | int %}
+                        <div class="bar">
+                            <span style="font-weight: 500; font-size: 12px; color: var(--ink);" title="{{ cat.category }}">{{ cat.category }}</span>
+                            <div class="bartrack"><i data-width="{{ percent }}" style="width: 0%;"></i></div>
+                            <b>₹{{ "{:,.2f}".format(cat.total) }}</b>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: var(--muted); font-size: 12px; padding: 20px 0;">No category statistics found.</p>
+                {% endif %}
+            </div>
+        </article>
+    </div>
+
+    <!-- Section 3: Vendor Concentration & Recurring Spend -->
+    <div class="grid two" style="margin-top: 16px;">
+        <!-- Vendor Analysis Table -->
+        <article class="card">
+            <div class="cardhead" style="margin-bottom: 12px;">
+                <h2>Top Vendor Expenditure</h2>
+                <span class="status" style="font-size: 10px;">{{ vendors | length }} Top Vendors</span>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Transactions</th>
+                            <th>Avg / Transaction</th>
+                            <th>Total Spent</th>
+                            <th>Share</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if vendors %}
+                            {% for v in vendors %}
+                                <tr>
+                                    <td><b style="color: var(--ink); font-size: 13px;">{{ v.vendor }}</b></td>
+                                    <td style="color: var(--muted); font-size: 12px;">{{ v.transaction_count }}</td>
+                                    <td style="font-size: 12px; color: var(--muted);">₹{{ "{:,.2f}".format(v.average_transaction) }}</td>
+                                    <td style="font-weight: 700; color: var(--ink);">₹{{ "{:,.2f}".format(v.total) }}</td>
+                                    <td>
+                                        <span class="pill {% if v.percentage > 35 %}mid{% else %}low{% endif %}" style="font-size: 10px;">
+                                            {{ v.percentage }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--muted); padding: 20px 0;">No vendor records available.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <!-- Concentration Summary Card -->
+        <article class="card">
+            <h2>Vendor Concentration Profile</h2>
+            
+            <div style="background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Concentration Risk Level</span>
+                    <span class="pill {% if concentration.concentration_level in ['High', 'Severe'] %}{% elif concentration.concentration_level == 'Moderate' %}mid{% else %}status{% endif %}">
+                        {{ concentration.concentration_level }}
+                    </span>
+                </div>
+                <p style="font-size: 13px; color: var(--ink); margin: 0 0 14px; font-weight: 600;">
+                    {{ concentration.observation }}
+                </p>
+                <div class="bartrack" style="height: 8px;">
+                    <i style="width: {{ concentration.top_3_pct }}%; background: {% if concentration.concentration_level in ['High', 'Severe'] %}#bd4034{% elif concentration.concentration_level == 'Moderate' %}#a56705{% else %}#177e61{% endif %};"></i>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px;">
+                    <span>Top 1 Vendor: <b>{{ concentration.top_1_pct }}%</b></span>
+                    <span>Top 3 Vendors: <b>{{ concentration.top_3_pct }}%</b></span>
+                </div>
+            </div>
+
+            <h3 style="font-size: 12px; font-weight: 800; color: var(--muted); letter-spacing: 0.5px; margin: 0 0 10px; text-transform: uppercase;">Recurring Vendor Relationships</h3>
+            {% if recurring %}
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    {% for rec in recurring[:4] %}
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: white; border: 1px solid var(--line); border-radius: 6px; font-size: 12px;">
+                            <div>
+                                <b style="color: var(--ink);">{{ rec.vendor }}</b>
+                                <span style="color: var(--muted); font-size: 11px; margin-left: 6px;">({{ rec.transaction_count }} transactions)</span>
+                            </div>
+                            <span style="font-weight: 700; color: var(--ink);">₹{{ "{:,.2f}".format(rec.total) }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: var(--muted); font-size: 12px; margin: 0;">No recurring vendors identified yet.</p>
+            {% endif %}
+        </article>
+    </div>
+
+    <!-- Section 4: Detected Financial Risk Signals & Anomalies -->
+    <article class="card" style="margin-top: 20px;">
+        <div class="cardhead" style="margin-bottom: 16px;">
+            <div>
+                <h2>Financial Risk Signals & Detected Anomalies</h2>
+                <p style="color: var(--muted); font-size: 12.5px; margin: 2px 0 0;">
+                    Automated deterministic audit of duplicate invoices, unusual transaction sizes, and arithmetic discrepancies.
+                </p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span class="pill" style="font-size: 11px;">{{ anomaly_summary.critical }} Critical</span>
+                <span class="pill mid" style="font-size: 11px;">{{ anomaly_summary.high }} High</span>
+                <span class="status" style="background: #e8f0ff; color: var(--blue); font-size: 11px;">{{ anomaly_summary.medium + anomaly_summary.low }} Moderate/Low</span>
+            </div>
+        </div>
+
+        {% if anomalies %}
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                {% for anom in anomalies %}
+                    <div style="border: 1px solid var(--line); border-radius: 10px; padding: 16px; background: white; transition: box-shadow 0.15s ease;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="pill {% if anom.severity == 'CRITICAL' %}{% elif anom.severity == 'HIGH' %}{% elif anom.severity == 'MEDIUM' %}mid{% else %}status{% endif %}" style="font-size: 10px; padding: 4px 8px;">
+                                    {{ anom.severity }}
+                                </span>
+                                <b style="font-size: 14px; color: var(--ink);">{{ anom.title }}</b>
+                            </div>
+                            <a href="{{ url_for('documents.detail', id=anom.document_id) }}" class="primary smallbtn" style="text-decoration: none; font-size: 11px; padding: 5px 10px;">
+                                Review Document →
+                            </a>
+                        </div>
+                        
+                        <p style="font-size: 13px; color: var(--ink); margin: 0 0 10px; line-height: 1.5;">
+                            {{ anom.description }}
+                        </p>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; font-size: 12px;">
+                            <div>
+                                <span style="color: var(--muted); font-size: 10.5px; font-weight: 700; text-transform: uppercase;">Source Document</span>
+                                <div style="font-weight: 600; color: var(--ink); margin-top: 2px;">{{ anom.document_name }}</div>
+                            </div>
+                            <div>
+                                <span style="color: var(--muted); font-size: 10.5px; font-weight: 700; text-transform: uppercase;">Detected Value</span>
+                                <div style="font-weight: 700; color: #bd4034; margin-top: 2px;">{{ anom.detected_value }}</div>
+                            </div>
+                            <div>
+                                <span style="color: var(--muted); font-size: 10.5px; font-weight: 700; text-transform: uppercase;">Expected Benchmark</span>
+                                <div style="font-weight: 600; color: var(--ink); margin-top: 2px;">{{ anom.expected_value }}</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 10px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px;">
+                            <span style="color: var(--blue); font-weight: 700;">Action:</span>
+                            <span>{{ anom.recommended_review_action }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 40px 20px; background: #f8fbff; border: 1px dashed #adc5ef; border-radius: 8px;">
+                <div style="font-size: 28px; color: #177e61; margin-bottom: 8px;">✓</div>
+                <h3 style="font-size: 14px; margin: 0 0 4px; color: var(--ink);">All Clear — Zero Anomalies</h3>
+                <p style="color: var(--muted); font-size: 12px; margin: 0;">
+                    All processed financial documents satisfy mathematical verification, uniqueness checks, and historical variance boundaries.
+                </p>
+            </div>
+        {% endif %}
+    </article>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
+

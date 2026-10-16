@@ -7,6 +7,7 @@ from flask import current_app
 from app.models.document import Document
 from app.repositories.document_repository import DocumentRepository
 from app.services.storage_service import StorageService
+from app.extensions import db
 
 class DocumentService:
     """Service handling business logic for documents."""
@@ -51,8 +52,12 @@ class DocumentService:
                 return True, "Document uploaded successfully.", document
                 
             except Exception as db_err:
-                # Database insertion failed, rollback physical file
-                current_app.logger.error(f"Database error during upload: {db_err}")
+                # Database insertion failed: explicitly rollback session and clean up newly saved file
+                current_app.logger.error(f"Database error during document upload persistence: {db_err}", exc_info=True)
+                try:
+                    self.document_repo.rollback()
+                except Exception as rb_err:
+                    current_app.logger.error(f"Session rollback failed after upload DB error: {rb_err}")
                 self.storage_service.delete_file(physical_path)
                 return False, "Database error during upload. File was not saved.", None
                 
@@ -75,17 +80,24 @@ class DocumentService:
         document = self.document_repo.get_by_id_and_user(document_id, user_id)
         if not document:
             return False, "Document not found or access denied."
-            
-        # Delete physical file
-        self.storage_service.delete_file(document.file_path)
-        
-        # Delete database record
+
+        file_path = document.file_path
+
+        # 1. Coordinate database transaction first
         try:
             self.document_repo.delete(document, commit=True)
-            return True, "Document deleted successfully."
         except Exception as e:
             current_app.logger.error(f"Error deleting document record: {e}")
+            db.session.rollback()
             return False, "An error occurred while deleting the document record."
+
+        # 2. Clean up associated physical file after DB record is removed
+        file_deleted = self.storage_service.delete_file(file_path)
+        if not file_deleted:
+            current_app.logger.error(f"Document record deleted for {document_id}, but physical file cleanup failed: {file_path}")
+            return False, "Document record removed, but stored file could not be cleaned up."
+
+        return True, "Document deleted successfully."
             
     def get_document_for_download(self, document_id: int, user_id: int) -> Tuple[bool, str, Optional[Document]]:
         """Validates ownership and returns the absolute path for download.

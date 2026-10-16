@@ -1,101 +1,236 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - DocuMind AI{% endblock %}
+{% block title %}Financial Dashboard — FinPilot AI{% endblock %}
 
 {% block content %}
-<div class="container mt-5 pt-4 mb-5">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="fw-bold mb-1">Dashboard</h2>
-            <p class="text-muted mb-0">Welcome back, {{ current_user.username }}! Here is your document overview.</p>
-        </div>
-    </div>
+<!-- Pre-calculated initial dashboard data JSON block for instantaneous load -->
+<script id="initialDashboardData" type="application/json">
+    {{ initial_data | tojson | safe if initial_data else '{}' }}
+</script>
 
-    <!-- Stats Cards -->
-    <div class="row g-4 mb-5">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100 bg-primary text-white">
-                <div class="card-body p-4">
-                    <h6 class="card-subtitle mb-2 opacity-75 fw-semibold text-uppercase">Total Documents</h6>
-                    <h2 class="card-title fw-bold mb-0">{{ counts.total }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100 border-start border-warning border-4">
-                <div class="card-body p-4">
-                    <h6 class="card-subtitle mb-2 text-muted fw-semibold text-uppercase">Pending</h6>
-                    <h2 class="card-title fw-bold text-dark mb-0">{{ counts.pending }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100 border-start border-success border-4">
-                <div class="card-body p-4">
-                    <h6 class="card-subtitle mb-2 text-muted fw-semibold text-uppercase">Processed</h6>
-                    <h2 class="card-title fw-bold text-dark mb-0">{{ counts.processed }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100 border-start border-danger border-4">
-                <div class="card-body p-4">
-                    <h6 class="card-subtitle mb-2 text-muted fw-semibold text-uppercase">Failed</h6>
-                    <h2 class="card-title fw-bold text-dark mb-0">{{ counts.failed }}</h2>
-                </div>
-            </div>
-        </div>
-    </div>
+{% set total_docs = initial_data.metrics.total_documents if initial_data else 0 %}
+{% set pending_docs = initial_data.metrics.pending_documents if initial_data else 0 %}
+{% set failed_docs = initial_data.metrics.failed_documents if initial_data else 0 %}
+{% set dd_score = dd_report.overall_score if dd_report else 100 %}
 
-    <!-- Recent Documents -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">Recent Documents</h5>
-                    <a href="{{ url_for('documents.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
+{% if total_docs == 0 %}
+    {% set dd_score = 100 %}
+{% else %}
+    {% set dd_score = (100 - (pending_docs / total_docs) * 40 - (failed_docs / total_docs) * 60) | round | int %}
+    {% if dd_score < 30 %}{% set dd_score = 30 %}{% endif %}
+{% endif %}
+
+<!-- Check if the workspace is empty (0 documents in all-time) -->
+{% if total_docs == 0 %}
+    <section class="page active" id="empty-state">
+        <header class="top">
+            <div>
+                <p class="eyebrow">FINANCIAL COMMAND CENTER</p>
+                <h1>Good morning, {{ current_user.full_name or current_user.username }}</h1>
+                <p>Your financial activity, explained from the documents behind it.</p>
+            </div>
+            <a href="{{ url_for('documents.upload') }}" class="primary" style="text-decoration: none;">＋ Upload document</a>
+        </header>
+
+        <div class="card" style="text-align: center; padding: 72px 24px; border: 1.5px dashed var(--border-strong); background: var(--surface); border-radius: var(--radius-lg); margin-top: 16px;">
+            <div style="font-size: 40px; color: var(--brand-primary); margin-bottom: 16px;">📊</div>
+            <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--ink);">No financial documents uploaded yet</h2>
+            <p style="color: var(--muted); max-width: 480px; margin: 0 auto 24px; font-size: 14px; line-height: 1.6;">
+                Upload your invoices, receipts, or financial statements in PDF, DOCX, or image formats. FinPilot AI will extract metadata, run OCR, detect anomalies, and build real-time financial intelligence.
+            </p>
+            <a href="{{ url_for('documents.upload') }}" class="primary" style="text-decoration: none; padding: 12px 28px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                <span>＋</span> Upload Your First Document
+            </a>
+        </div>
+    </section>
+{% else %}
+    <section class="page active" id="overview">
+        <!-- Dashboard Header -->
+        <header class="top">
+            <div>
+                <p class="eyebrow">FINANCIAL COMMAND CENTER</p>
+                <h1>Good morning, {{ current_user.full_name or current_user.username }}</h1>
+                <p>Your financial activity, explained from the documents behind it.</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a href="{{ url_for('placeholders.reports') }}" class="secondary" style="text-decoration: none;">📄 Reports</a>
+                <a href="{{ url_for('placeholders.financial_intelligence') }}" class="secondary" style="text-decoration: none;">✦ Intelligence</a>
+                <a href="{{ url_for('documents.upload') }}" class="primary" style="text-decoration: none;">＋ Upload</a>
+            </div>
+        </header>
+
+        <!-- 4 KPI Metrics Row with requestAnimationFrame Count-up Animation -->
+        <div class="metrics">
+            <div class="metric">
+                <span>TOTAL EXPENSES</span>
+                <strong id="valTotalExpenses" data-value="{{ initial_data.metrics.total_expenses if initial_data else 0 }}">₹{{ "{:,.2f}".format(initial_data.metrics.total_expenses if initial_data else 0) }}</strong>
+                <small style="color: var(--emerald);">Verified ledger extractions</small>
+            </div>
+            <div class="metric">
+                <span>DOCUMENTS PROCESSED</span>
+                <strong id="valTotalDocs" data-value="{{ initial_data.metrics.total_documents if initial_data else 0 }}">{{ initial_data.metrics.total_documents if initial_data else 0 }}</strong>
+                <small>{{ initial_data.metrics.processed_documents if initial_data else 0 }} analyzed · {{ initial_data.metrics.pending_documents if initial_data else 0 }} pending</small>
+            </div>
+            <div class="metric">
+                <span>AVERAGE TRANSACTION</span>
+                <strong id="valAvgTransaction" data-value="{{ initial_data.metrics.average_expense if initial_data else 0 }}">₹{{ "{:,.2f}".format(initial_data.metrics.average_expense if initial_data else 0) }}</strong>
+                <small style="color: var(--muted);">Per document mean</small>
+            </div>
+            <div class="metric">
+                <span>DUE DILIGENCE SCORE</span>
+                <strong id="valDdScore" data-value="{{ dd_score }}">{{ dd_score }}/100</strong>
+                <small style="color: {% if dd_score >= 85 %}var(--emerald){% elif dd_score >= 60 %}var(--amber){% else %}var(--red){% endif %};">
+                    {{ dd_report.risk_profile if dd_report else 'Low risk profile' }}
+                </small>
+            </div>
+        </div>
+
+        <!-- Upper Grid: Charts and Categories -->
+        <div class="grid two">
+            <!-- Spend Chart Card -->
+            <article class="card">
+                <div class="cardhead" style="margin-bottom: 16px;">
+                    <div>
+                        <h2>Spending over time</h2>
+                        <small style="color: var(--muted);">Aggregate expenditure by monthly statement</small>
+                    </div>
+                    <select id="dateRangeFilter" style="border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--brand-primary); font-weight: 600; font-size: 13px; padding: 4px 8px; cursor: pointer; outline: none;">
+                        <option value="30d">Last 30 days</option>
+                        <option value="3m">Last 3 months</option>
+                        <option value="6m">Last 6 months</option>
+                        <option value="12m" selected>Last 12 months</option>
+                        <option value="all">All time</option>
+                    </select>
                 </div>
-                <div class="card-body p-4">
-                    {% if recent_docs %}
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light text-muted small text-uppercase">
+                
+                <div class="chart" id="spendingChartContainer">
+                    <svg viewBox="0 0 650 225" preserveAspectRatio="none" id="trendChartSvg">
+                        <!-- Dynamic SVG paths loaded via JS -->
+                        <path d="M0 225 V225 H0Z" fill="rgba(6, 182, 212, 0.12)" id="trendChartArea" style="transition: all 0.5s ease;"/>
+                        <polyline points="" fill="none" stroke="var(--teal)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" id="trendChartLine" style="transition: all 0.5s ease;"/>
+                    </svg>
+                </div>
+            </article>
+
+            <!-- Categories Card -->
+            <article class="card">
+                <div class="cardhead" style="margin-bottom: 16px;">
+                    <div>
+                        <h2>Spending by category</h2>
+                        <small style="color: var(--muted);">Expenditure allocation across categories</small>
+                    </div>
+                </div>
+                <div id="categoryContainer">
+                    {% if initial_data and initial_data.category_breakdown %}
+                        {% set max_cat_val = namespace(val=1) %}
+                        {% for cat in initial_data.category_breakdown %}
+                            {% if cat.total > max_cat_val.val %}
+                                {% set max_cat_val.val = cat.total %}
+                            {% endif %}
+                        {% endfor %}
+                        {% for cat in initial_data.category_breakdown %}
+                            {% set percent = ((cat.total / max_cat_val.val) * 100) | round | int %}
+                            <div class="bar">
+                                <span style="font-weight: 500; font-size: 13px; color: var(--ink);">{{ cat.category }}</span>
+                                <div class="bartrack"><i data-width="{{ percent }}" style="width: 0%;"></i></div>
+                                <b style="font-size: 13px;">₹{{ "{:,.2f}".format(cat.total) }}</b>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: var(--muted); font-size: 13px; padding: 24px 0; text-align: center;">No category statistics found.</p>
+                    {% endif %}
+                </div>
+            </article>
+        </div>
+
+        <!-- Lower Grid: Recent Docs and Priority Review -->
+        <div class="grid two" style="margin-top: 16px;">
+            <!-- Recent Documents Table -->
+            <article class="card">
+                <div class="cardhead" style="margin-bottom: 14px;">
+                    <h2>Recent documents</h2>
+                    <a href="{{ url_for('documents.index') }}" class="link">All documents →</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Document</th>
+                                <th>Vendor</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentDocsTableBody">
+                            {% if initial_data and initial_data.recent_documents %}
+                                {% for doc in initial_data.recent_documents %}
                                     <tr>
-                                        <th class="ps-3 border-bottom-0">Filename</th>
-                                        <th class="border-bottom-0">Uploaded</th>
-                                        <th class="border-bottom-0">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="border-top-0">
-                                    {% for doc in recent_docs %}
-                                    <tr>
-                                        <td class="ps-3 py-3 fw-medium">
-                                            <a href="{{ url_for('documents.detail', id=doc.id) }}" class="text-dark text-decoration-none">{{ doc.original_filename }}</a>
-                                        </td>
-                                        <td class="text-muted small">{{ doc.created_at.strftime('%b %d, %Y') }}</td>
                                         <td>
-                                            {% if doc.status == 'pending' %}
-                                                <span class="badge bg-warning text-dark rounded-pill">Pending</span>
-                                            {% elif doc.status == 'processed' %}
-                                                <span class="badge bg-success rounded-pill">Processed</span>
+                                            <a href="{{ url_for('documents.detail', id=doc.id) }}" class="link" style="color: var(--ink); font-weight: 600;">{{ doc.filename }}</a><br>
+                                            <small style="color: var(--muted);">Uploaded {{ doc.created_at.split('T')[0] if 'T' in doc.created_at else doc.created_at }}</small>
+                                        </td>
+                                        <td style="font-weight: 500;">{{ doc.vendor or 'Unknown' }}</td>
+                                        <td style="font-weight: 600; color: var(--ink);">₹{{ "{:,.2f}".format(doc.total_amount) if doc.total_amount is not none else '—' }}</td>
+                                        <td>
+                                            {% if doc.status == 'processed' %}
+                                                <span class="status">Processed</span>
+                                            {% elif doc.status == 'pending' %}
+                                                <span class="status review">Review</span>
                                             {% else %}
-                                                <span class="badge bg-danger rounded-pill">Failed</span>
+                                                <span class="status error">Failed</span>
                                             {% endif %}
                                         </td>
                                     </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: var(--muted); padding: 32px 0;">No recent documents found.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <!-- Priority Review (Dynamic Anomalies) -->
+            <article class="card">
+                <div class="cardhead" style="margin-bottom: 14px;">
+                    <div>
+                        <h2>Priority review</h2>
+                        <small style="color: var(--muted);">Active risk signals requiring review</small>
+                    </div>
+                    <a href="{{ url_for('placeholders.financial_intelligence') }}" class="link">All Risk Signals →</a>
+                </div>
+                <div id="priorityAlertsContainer">
+                    {% if priority_alerts %}
+                        {% for alert in priority_alerts %}
+                            <div class="issue" style="margin-bottom: 12px; padding: 12px; background: var(--surface-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; gap: 12px; align-items: flex-start;">
+                                <span class="pill {% if alert.severity == 'MEDIUM' %}mid{% elif alert.severity in ['LOW', 'INFO'] %}status{% endif %}" style="font-size: 10px; margin-top: 2px;">
+                                    {{ alert.severity }}
+                                </span>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
+                                        <b style="font-size: 13px; color: var(--ink);">{{ alert.title }}</b>
+                                        <a href="{{ url_for('documents.detail', id=alert.document_id) }}" class="link" style="font-size: 12px; white-space: nowrap;">View →</a>
+                                    </div>
+                                    <small style="color: var(--muted); display: block; margin-top: 4px; line-height: 1.4;">{{ alert.description }}</small>
+                                </div>
+                            </div>
+                        {% endfor %}
                     {% else %}
-                        <div class="text-center py-4 text-muted">
-                            <p class="mb-3">You haven't uploaded any documents yet.</p>
-                            <a href="{{ url_for('documents.upload') }}" class="btn btn-primary rounded-pill px-4">Upload Document</a>
+                        <div style="text-align: center; padding: 48px 16px; color: var(--muted); font-size: 13px;">
+                            <span style="color: var(--emerald); font-weight: 600; font-size: 16px; display: block; margin-bottom: 6px;">✓ All clear</span>
+                            No financial risk anomalies or arithmetic discrepancies detected across your documents.
                         </div>
                     {% endif %}
                 </div>
-            </div>
+            </article>
         </div>
-    </div>
-</div>
+    </section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<!-- Modular Dashboard growth and SVG animations Script -->
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

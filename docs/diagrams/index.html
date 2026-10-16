@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinPilot AI — Architectural & System Diagrams</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 24px; }
+    .header { max-width: 1200px; margin: 0 auto 24px; text-align: center; }
+    .header h1 { font-size: 28px; font-weight: 700; color: #1e3a8a; margin-bottom: 8px; }
+    .header p { color: var(--muted); font-size: 15px; }
+    .container { max-width: 1200px; margin: 0 auto; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; }
+    .nav-tabs { display: flex; flex-wrap: wrap; background: #f1f5f9; border-bottom: 1px solid var(--border); padding: 8px 12px 0; gap: 6px; }
+    .tab-btn { background: transparent; border: none; padding: 10px 18px; font-size: 14px; font-weight: 600; color: var(--muted); border-radius: 8px 8px 0 0; cursor: pointer; transition: all 0.2s; }
+    .tab-btn:hover { color: var(--primary); background: rgba(255,255,255,0.6); }
+    .tab-btn.active { color: var(--primary); background: var(--card-bg); border: 1px solid var(--border); border-bottom-color: var(--card-bg); margin-bottom: -1px; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--border); background: #ffffff; }
+    .toolbar-title { font-size: 16px; font-weight: 600; color: #1e293b; }
+    .btn-group { display: flex; gap: 10px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 13px; font-weight: 500; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); background: #ffffff; color: var(--text); transition: all 0.15s; }
+    .btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+    .btn-primary { background: var(--primary); color: #ffffff; border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .diagram-viewport { background: #ffffff; padding: 32px; min-height: 550px; display: flex; justify-content: center; align-items: center; overflow: auto; }
+    .diagram-pane { display: none; width: 100%; text-align: center; }
+    .diagram-pane.active { display: block; }
+    .mermaid { width: 100%; }
+    .mermaid svg { max-width: 100%; height: auto !important; background: #ffffff; }
+    footer { max-width: 1200px; margin: 20px auto 0; text-align: center; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>FinPilot AI — System & Architecture Diagrams</h1>
+    <p>Complete diagram suite rendered on clean white background with instant SVG and PNG download options.</p>
+  </div>
+
+  <div class="container">
+    <div class="nav-tabs" id="tabContainer">
+      <button class="tab-btn active" onclick="switchTab(0)">1. Flowchart / Graph</button>
+      <button class="tab-btn" onclick="switchTab(1)">2. State Diagram (Lifecycle)</button>
+      <button class="tab-btn" onclick="switchTab(2)">3. Sequence Diagram (Assistant)</button>
+      <button class="tab-btn" onclick="switchTab(3)">4. Class Diagram (Domain)</button>
+      <button class="tab-btn" onclick="switchTab(4)">5. ER Diagram (MySQL)</button>
+      <button class="tab-btn" onclick="switchTab(5)">6. XY Chart (Analytics)</button>
+    </div>
+
+    <div class="toolbar">
+      <span class="toolbar-title" id="currentDiagramTitle">System Architecture & Ingestion Pipeline</span>
+      <div class="btn-group">
+        <button class="btn" onclick="copyMermaidCode()">📋 Copy Mermaid Code</button>
+        <button class="btn btn-primary" onclick="downloadSVG()">⬇️ Download SVG</button>
+        <button class="btn btn-primary" onclick="downloadPNG()">⬇️ Download PNG</button>
+      </div>
+    </div>
+
+    <div class="diagram-viewport">
+      <!-- 1. Flowchart -->
+      <div class="diagram-pane active" id="pane-0">
+        <div class="mermaid" id="diag-0">
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#ffffff', 'primaryColor': '#ffffff', 'primaryBorderColor': '#2563eb', 'primaryTextColor': '#0f172a', 'lineColor': '#475569', 'clusterBkg': '#ffffff', 'clusterBorder': '#94a3b8'}}}%%
+flowchart LR
+    Client["💻 Web Browser / Client"]
+
+    subgraph Security["Security & Ingestion Layer"]
+        CSRF["CSRF & Session Protection"]
+        Limiter["Flask-Limiter (Rate Limiting)"]
+        MagicValidator["Magic-Bytes & MIME Sniffer"]
+    end
+
+    subgraph Core["FinPilot AI Core Engine"]
+        Storage["Storage Service (Encrypted Local / Cloud)"]
+        OCR["OCR & Table Extraction (PyMuPDF / Tesseract)"]
+        FinAnalytics["Financial Intelligence (Ratios & DuPont)"]
+        Anomaly["Anomaly Detection Engine"]
+    end
+
+    subgraph Knowledge["Grounding & AI Assistant"]
+        Evidence["Evidence Retrieval & Citation Index"]
+        LLM["AI / LLM Synthesis Engine"]
+    end
+
+    subgraph Output["Reporting & Persistence"]
+        DB[("MySQL Database")]
+        PDFGen["ReportLab PDF Generator"]
+    end
+
+    Client -->|HTTPS POST| CSRF
+    CSRF --> Limiter
+    Limiter --> MagicValidator
+    MagicValidator --> Storage
+    Storage --> OCR
+    OCR --> FinAnalytics
+    FinAnalytics --> Anomaly
+    Anomaly --> DB
+
+    Client -->|Interactive Query| Evidence
+    DB --> Evidence
+    Evidence --> LLM
+    LLM --> Client
+
+    Client -->|Generate Report| PDFGen
+    DB --> PDFGen
+    FinAnalytics --> PDFGen
+
+    classDef default fill:#ffffff,stroke:#2563eb,stroke-width:1.5px,color:#0f172a;
+    classDef highlight fill:#f8fafc,stroke:#1e3a8a,stroke-width:2px,color:#0f172a;
+    classDef db fill:#ffffff,stroke:#0d9488,stroke-width:2px,color:#0f172a;
+    class Client,LLM highlight;
+    class DB db;
+        </div>
+      </div>
+
+      <!-- 2. State Diagram -->
+      <div class="diagram-pane" id="pane-1">
+        <div class="mermaid" id="diag-1">
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#ffffff', 'primaryColor': '#ffffff', 'primaryBorderColor': '#2563eb', 'primaryTextColor': '#0f172a', 'lineColor': '#475569'}}}%%
+stateDiagram-v2
+    [*] --> Uploaded : Document Uploaded by User
+
+    Uploaded --> Validating : Check File Type & Magic Bytes
+    Validating --> Rejected : Invalid Extension / Corrupt Signature
+    Rejected --> [*] : Temporary File Deleted
+
+    Validating --> Stored : Magic Bytes & MIME Validated
+    Stored --> Ingesting_OCR : Extract Raw Text & Tables
+    
+    Ingesting_OCR --> Extracted : OCR Complete
+    Extracted --> Analyzing_Financials : Calculate KPIs & Ratios
+    
+    Analyzing_Financials --> Anomaly_Scan : Evaluate Discrepancies
+    Anomaly_Scan --> Processed : Analysis Persisted in DB
+
+    state Processed {
+        [*] --> Ready
+        Ready --> Queryable : Available in AI Assistant
+        Ready --> Reportable : Available in Financial Reports
+    }
+
+    Processed --> Deleting : User Confirms Deletion via Modal
+    Deleting --> [*] : Atomic DB Rollback & Physical File Cleanup
+        </div>
+      </div>
+
+      <!-- 3. Sequence Diagram -->
+      <div class="diagram-pane" id="pane-2">
+        <div class="mermaid" id="diag-2">
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#ffffff', 'primaryColor': '#ffffff', 'primaryBorderColor': '#2563eb', 'primaryTextColor': '#0f172a', 'lineColor': '#475569', 'actorBkg': '#ffffff', 'actorBorder': '#1e40af', 'signalColor': '#334155'}}}%%
+sequenceDiagram
+    autonumber
+    actor User as 👤 Financial Analyst
+    participant UI as 💻 Browser (Web Client)
+    participant Route as 🛡️ Flask Assistant Route
+    participant Evidence as 🔍 Evidence Retrieval Service
+    participant DB as 🗄️ MySQL Database
+    participant LLM as 🧠 AI / LLM Engine
+
+    User->>UI: Types financial inquiry (e.g., "Summarize Q3 operating margin")
+    UI->>Route: POST /dashboard/assistant/chat (CSRF + Session Cookie)
+    
+    Route->>DB: Query user documents & extraction records
+    DB-->>Route: Return structured tables & text chunks
+    
+    Route->>Evidence: Retrieve relevant evidence snippets matching query
+    Evidence-->>Route: Grounded citations (Page #, table cells, doc ID)
+    
+    Route->>LLM: Send prompt + System Guardrails + Verified Context
+    LLM-->>Route: Generate answer grounded strictly in provided context
+    
+    Route->>DB: Save interaction in chat_histories (User prompt, AI answer, citations)
+    DB-->>Route: Commit confirmed
+    
+    Route-->>UI: JSON { answer: "...", citations: [...] }
+    UI->>User: Render response with clickable evidence source pills
+        </div>
+      </div>
+
+      <!-- 4. Class Diagram -->
+      <div class="diagram-pane" id="pane-3">
+        <div class="mermaid" id="diag-3">
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#ffffff', 'primaryColor': '#ffffff', 'primaryBorderColor': '#2563eb', 'primaryTextColor': '#0f172a', 'lineColor': '#475569'}}}%%
+classDiagram
+    class User {
+        +int id
+        +string email
+        +string password_hash
+        +string role
+        +string google_sub
+        +datetime created_at
+        +check_password(password) bool
+    }
+
+    class Document {
+        +int id
+        +int user_id
+        +string filename
+        +string original_filename
+        +string file_path
+        +string file_type
+        +int file_size
+        +string status
+        +datetime created_at
+    }
+
+    class DocumentAnalysis {
+        +int id
+        +int document_id
+        +json extracted_data
+        +json metrics
+        +json anomalies
+        +float confidence_score
+        +datetime updated_at
+    }
+
+    class Report {
+        +int id
+        +int user_id
+        +string title
+        +string report_type
+        +json summary_data
+        +string file_path
+        +datetime created_at
+    }
+
+    class ChatHistory {
+        +int id
+        +int user_id
+        +string session_id
+        +string role
+        +text message
+        +json evidence_metadata
+        +datetime created_at
+    }
+
+    class StorageService {
+        +save_file(file, user_id) string
+        +delete_file(file_path) bool
+        +validate_magic_bytes(stream, expected_type) bool
+    }
+
+    class DocumentService {
+        +upload_document(user_id, file) Document
+        +delete_document(doc_id, user_id) bool
+    }
+
+    class FinancialIntelligenceService {
+        +calculate_ratios(extracted_data) dict
+        +detect_anomalies(data) list
+    }
+
+    User "1" --> "*" Document : owns
+    User "1" --> "*" Report : generates
+    User "1" --> "*" ChatHistory : maintains
+    Document "1" --> "1" DocumentAnalysis : analyzed_by
+    DocumentService ..> StorageService : uses
+    DocumentService ..> FinancialIntelligenceService : triggers
+        </div>
+      </div>
+
+      <!-- 5. ER Diagram -->
+      <div class="diagram-pane" id="pane-4">
+        <div class="mermaid" id="diag-4">
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#ffffff', 'primaryColor': '#ffffff', 'primaryBorderColor': '#2563eb', 'primaryTextColor': '#0f172a', 'lineColor': '#475569'}}}%%
+erDiagram
+    USERS ||--o{ DOCUMENTS : "owns"
+    USERS ||--o{ REPORTS : "generates"
+    USERS ||--o{ CHAT_HISTORIES : "records"
+    DOCUMENTS ||--o| DOCUMENT_ANALYSES : "evaluated_by"
+
+    USERS {
+        int id PK
+        varchar(120) email UK
+        varchar(255) password_hash
+        varchar(50) role
+        varchar(255) google_sub UK
+        datetime created_at
+    }
+
+    DOCUMENTS {
+        int id PK
+        int user_id FK
+        varchar(255) filename
+        varchar(255) original_filename
+        varchar(500) file_path
+        varchar(255) file_type
+        bigint file_size
+        varchar(50) status
+        datetime created_at
+    }
+
+    DOCUMENT_ANALYSES {
+        int id PK
+        int document_id FK,UK
+        json extracted_data
+        json metrics
+        json anomalies
+        float confidence_score
+        datetime updated_at
+    }
+
+    REPORTS {
+        int id PK
+        int user_id FK
+        varchar(255) title
+        varchar(100) report_type
+        json summary_data
+        varchar(500) file_path
+        datetime created_at
+    }
+
+    CHAT_HISTORIES {
+        int id PK
+        int user_id FK
+        varchar(100) session_id
+        varchar(20) role
+        text message
+        json evidence_metadata
+        datetime created_at
+    }
+        </div>
+      </div>
+
+      <!-- 6. XY Chart -->
+      <div class="diagram-pane" id="pane-5">
+        <div class="mermaid" id="diag-5">
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#ffffff', 'primaryColor': '#2563eb', 'primaryBorderColor': '#1e40af', 'primaryTextColor': '#0f172a', 'lineColor': '#059669', 'xyChart': {'backgroundColor': '#ffffff', 'titleColor': '#0f172a', 'xAxisLabelColor': '#475569', 'yAxisLabelColor': '#475569', 'plotColorPalette': '#2563eb,#10b981,#f59e0b'}}}}%%
+xychart-beta
+    title "FinPilot AI — Quarterly Financial Analytics (Revenue vs Net Profit in $k)"
+    x-axis ["Q1-2025", "Q2-2025", "Q3-2025", "Q4-2025", "Q1-2026", "Q2-2026"]
+    y-axis "Revenue and Profit ($k)" 0 --> 500
+    bar [180, 230, 310, 395, 430, 480]
+    line [42, 60, 88, 115, 130, 155]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>FinPilot AI Architecture Documentation &copy; 2026</footer>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, securityLevel: 'loose' });
+
+    const titles = [
+      "1. System Architecture & Ingestion Pipeline (flowchart LR)",
+      "2. Document Ingestion & Processing Lifecycle (stateDiagram-v2)",
+      "3. Evidence-Grounded AI Assistant Flow (sequenceDiagram)",
+      "4. Core Domain Models & Services (classDiagram)",
+      "5. MySQL Relational Schema (erDiagram)",
+      "6. Quarterly Financial Analytics Trends (xychart-beta)"
+    ];
+
+    const fileNames = [
+      "01_finpilot_architecture_flowchart",
+      "02_finpilot_lifecycle_state",
+      "03_finpilot_assistant_sequence",
+      "04_finpilot_domain_class",
+      "05_finpilot_schema_er",
+      "06_finpilot_metrics_xychart"
+    ];
+
+    let currentIdx = 0;
+
+    function switchTab(idx) {
+      currentIdx = idx;
+      const tabs = document.querySelectorAll('.tab-btn');
+      const panes = document.querySelectorAll('.diagram-pane');
+
+      tabs.forEach((tab, i) => tab.classList.toggle('active', i === idx));
+      panes.forEach((pane, i) => pane.classList.toggle('active', i === idx));
+      document.getElementById('currentDiagramTitle').innerText = titles[idx];
+    }
+
+    function getCurrentSVG() {
+      const activePane = document.getElementById(`pane-${currentIdx}`);
+      return activePane.querySelector('svg');
+    }
+
+    function downloadSVG() {
+      const svg = getCurrentSVG();
+      if (!svg) return alert("Diagram is still rendering...");
+      
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${fileNames[currentIdx]}.svg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadPNG() {
+      const svg = getCurrentSVG();
+      if (!svg) return alert("Diagram is still rendering...");
+
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = function() {
+        const bbox = svg.getBoundingClientRect();
+        const scale = 2; // High-resolution export
+        canvas.width = (bbox.width || 1200) * scale;
+        canvas.height = (bbox.height || 700) * scale;
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const pngUrl = canvas.toDataURL("image/png");
+        const a = document.createElement("a");
+        a.href = pngUrl;
+        a.download = `${fileNames[currentIdx]}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    }
+
+    function copyMermaidCode() {
+      const activeDiag = document.getElementById(`diag-${currentIdx}`);
+      const code = activeDiag.innerText.trim();
+      navigator.clipboard.writeText(code).then(() => {
+        alert("Mermaid source code copied to clipboard!");
+      });
+    }
+  </script>
+</body>
+</html>

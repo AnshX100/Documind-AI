@@ -1,7 +1,44 @@
+# Environment & Secrets
 .env
+*.pem
+*.key
+
+# Python
 venv/
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+
+# Uploads & User Data
 uploads/
+tests/temp_uploads/
+
+# Database
 *.db
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.DS_Store
+
+# Word temporary lock files
+~$*
+
+# Scratch / debug output (not project code)
+check2.txt
+output.txt
+route_check.txt
+template_check.log
+script_2.json
+
+# Ad-hoc root-level test scripts (formal tests live in tests/)
+test_extraction.py
+test_extraction_2.py
+test_invoice.py
+
+# Large binary documents (kept locally, not in repo)
+*.docx

@@ -15,7 +15,7 @@ class UploadDocumentForm(FlaskForm):
         'Upload Document',
         validators=[
             FileRequired(message='Please select a file to upload.'),
-            FileAllowed(['pdf', 'png', 'jpg', 'jpeg'], 'Only PDF, PNG, JPG, and JPEG files are allowed.')
+            FileAllowed(['pdf', 'png', 'jpg', 'jpeg', 'webp', 'docx'], 'Only PDF, DOCX, PNG, JPG, JPEG, and WEBP files are allowed.')
         ]
     )
     submit = SubmitField('Upload')

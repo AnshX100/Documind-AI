@@ -1,0 +1,27 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#ffffff', 'primaryColor': '#ffffff', 'primaryBorderColor': '#2563eb', 'primaryTextColor': '#0f172a', 'lineColor': '#475569', 'actorBkg': '#ffffff', 'actorBorder': '#1e40af', 'signalColor': '#334155'}}}%%
+sequenceDiagram
+    autonumber
+    actor User as 👤 Financial Analyst
+    participant UI as 💻 Browser (Web Client)
+    participant Route as 🛡️ Flask Assistant Route
+    participant Evidence as 🔍 Evidence Retrieval Service
+    participant DB as 🗄️ MySQL Database
+    participant LLM as 🧠 AI / LLM Engine
+
+    User->>UI: Types financial inquiry (e.g., "Summarize Q3 operating margin")
+    UI->>Route: POST /dashboard/assistant/chat (CSRF + Session Cookie)
+    
+    Route->>DB: Query user's processed documents & extraction data
+    DB-->>Route: Return structured tables & text chunks
+    
+    Route->>Evidence: Retrieve relevant evidence snippets matching query
+    Evidence-->>Route: Grounded citations (Page #, table cells, doc ID)
+    
+    Route->>LLM: Send prompt + System Guardrails + Verified Context
+    LLM-->>Route: Generate answer grounded strictly in provided context
+    
+    Route->>DB: Save interaction in chat_histories (User prompt, AI answer, citations)
+    DB-->>Route: Commit confirmed
+    
+    Route-->>UI: JSON { answer: "...", citations: [...] }
+    UI->>User: Render response with clickable evidence source pills

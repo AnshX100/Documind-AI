@@ -6,7 +6,7 @@ import logging
 from typing import Dict, Any, Optional
 from PIL import Image, ImageEnhance
 import pytesseract
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 
 try:
     from pdf2image import convert_from_path
@@ -20,8 +20,8 @@ class OCRService:
 
     def __init__(self, tesseract_cmd: Optional[str] = None, language: str = "eng"):
         self.language = language
-        if tesseract_cmd:
-            pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+        if tesseract_cmd and tesseract_cmd.strip():
+            pytesseract.pytesseract.tesseract_cmd = tesseract_cmd.strip()
 
     def extract_text(self, file_path: str, file_type: str) -> Dict[str, Any]:
         """
@@ -40,8 +40,10 @@ class OCRService:
         try:
             if file_type.lower() == 'application/pdf':
                 return self._process_pdf(file_path)
-            elif file_type.lower() in ['image/png', 'image/jpeg', 'image/jpg']:
+            elif file_type.lower() in ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']:
                 return self._process_image(file_path)
+            elif file_type.lower() == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+                return self._process_docx(file_path)
             else:
                 return {"success": False, "text": "", "error": f"Unsupported file type: {file_type}"}
                 
@@ -94,7 +96,7 @@ class OCRService:
                 return {"success": True, "text": combined_text, "error": None}
                 
         except Exception as e:
-            logger.warning(f"PyPDF2 extraction failed, attempting OCR fallback: {e}")
+            logger.warning(f"pypdf extraction failed, attempting OCR fallback: {e}")
             
         # Path B: Scanned PDF / OCR Fallback
         if not convert_from_path:
@@ -134,3 +136,35 @@ class OCRService:
             if "poppler" in str(e).lower():
                 return {"success": False, "text": "", "error": "Poppler is not installed or not in PATH. Required for PDF OCR."}
             return {"success": False, "text": "", "error": f"PDF OCR processing error: {str(e)}"}
+
+    def _process_docx(self, file_path: str) -> Dict[str, Any]:
+        """Extract text from a DOCX file using python-docx."""
+        try:
+            import docx
+            doc = docx.Document(file_path)
+            
+            text_parts = []
+            for para in doc.paragraphs:
+                if para.text.strip():
+                    text_parts.append(para.text.strip())
+                    
+            for table in doc.tables:
+                for row in table.rows:
+                    row_text = []
+                    for cell in row.cells:
+                        if cell.text.strip():
+                            row_text.append(cell.text.strip())
+                    if row_text:
+                        text_parts.append(" | ".join(row_text))
+                        
+            combined_text = "\n".join(text_parts).strip()
+            
+            if not combined_text:
+                return {"success": False, "text": "", "error": "DOCX extraction completed but no text was found."}
+                
+            return {"success": True, "text": combined_text, "error": None}
+            
+        except ImportError:
+            return {"success": False, "text": "", "error": "python-docx library is not installed."}
+        except Exception as e:
+            return {"success": False, "text": "", "error": f"DOCX processing error: {str(e)}"}

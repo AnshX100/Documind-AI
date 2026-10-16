@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}AI Financial Copilot — FinPilot AI{% endblock %}
+
+{% block content %}
+<header class="top" style="margin-bottom: 20px;">
+    <div>
+        <p class="eyebrow">VERIFIED FINANCIAL ASSISTANT</p>
+        <h1 style="display: flex; align-items: center; gap: 10px;">
+            ✦ Financial Copilot
+        </h1>
+        <p>Ask natural questions about spending, vendors, anomalies, due diligence, and invoice risks.</p>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <button type="button" id="convDrawerToggle" class="secondary" style="padding: 8px 14px; font-size: 13px; display: none;" aria-label="Toggle history">
+            💬 History
+        </button>
+    </div>
+</header>
+
+<div class="assistant-container">
+    <!-- Left: Conversations Sidebar -->
+    <aside id="historySidebar" class="assistant-history-sidebar">
+        <div class="history-header">
+            <h3>Conversations</h3>
+            <button type="button" id="btnNewChat" class="btn-new-chat">
+                ＋ New Chat
+            </button>
+        </div>
+        <div id="historyList" class="history-list">
+            <!-- Dynamically populated via GET /api/assistant/history -->
+            <div style="color: var(--muted); font-size: 12px; padding: 10px 4px;">Loading chat history...</div>
+        </div>
+    </aside>
+
+    <!-- Right: Main Chat Workspace -->
+    <main class="assistant-main">
+        <div class="assistant-main-header">
+            <h2>
+                <span style="color: var(--brand-primary);">✦</span> FinPilot Financial Copilot
+            </h2>
+            <small style="color: var(--muted); font-weight: 600;">Verified Workspace Evidence</small>
+        </div>
+
+        <!-- Chat Thread -->
+        <div id="chatThread" class="assistant-chat-thread">
+            <!-- Empty State with Suggested Questions -->
+            <div id="emptyState" class="assistant-empty-state">
+                <div class="icon-badge">✦</div>
+                <h2 style="font-size: 20px; font-weight: 800; margin: 0 0 8px; color: var(--ink);">
+                    Financial Assistant
+                </h2>
+                <p style="color: var(--muted); font-size: 14px; margin: 0 0 24px; line-height: 1.6;">
+                    Ask questions about the financial documents you've analyzed with FinPilot AI.<br>
+                    All responses are calculated directly from verified workspace source files.
+                </p>
+
+                <div class="suggested-grid">
+                    <div class="suggested-card" data-prompt="How much did I spend this month?">
+                        <span>How much did I spend this month?</span>
+                        <span class="arrow">➔</span>
+                    </div>
+                    <div class="suggested-card" data-prompt="Which vendor received the most money?">
+                        <span>Which vendor received the most money?</span>
+                        <span class="arrow">➔</span>
+                    </div>
+                    <div class="suggested-card" data-prompt="What are my biggest spending categories?">
+                        <span>What are my biggest spending categories?</span>
+                        <span class="arrow">➔</span>
+                    </div>
+                    <div class="suggested-card" data-prompt="Show me unusual transactions">
+                        <span>Show me unusual transactions</span>
+                        <span class="arrow">➔</span>
+                    </div>
+                    <div class="suggested-card" data-prompt="Do I have duplicate invoices?">
+                        <span>Do I have duplicate invoices?</span>
+                        <span class="arrow">➔</span>
+                    </div>
+                    <div class="suggested-card" data-prompt="Compare this month with last month">
+                        <span>Compare this month with last month</span>
+                        <span class="arrow">➔</span>
+                    </div>
+                    <div class="suggested-card" data-prompt="What is my tax summary?">
+                        <span>What is my tax summary?</span>
+                        <span class="arrow">➔</span>
+                    </div>
+                    <div class="suggested-card" data-prompt="Give me a financial health summary">
+                        <span>Give me a financial health summary</span>
+                        <span class="arrow">➔</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="assistant-input-bar">
+            <form id="assistantForm" autocomplete="off">
+                <textarea id="assistantInput" placeholder="Ask about your spending, vendors, tax, or document risks (Press Enter to send)..." maxlength="500" required></textarea>
+                <button type="submit" id="btnSendAssistant" class="primary" style="padding: 12px 22px; height: 46px; display: inline-flex; align-items: center; gap: 6px;">
+                    Send ➔
+                </button>
+            </form>
+        </div>
+    </main>
+</div>
+
+<!-- Import Assistant Frontend Module -->
+<script src="{{ url_for('static', filename='js/assistant.js') }}"></script>
+{% endblock %}

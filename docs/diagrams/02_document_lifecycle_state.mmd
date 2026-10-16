@@ -1,0 +1,25 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#ffffff', 'primaryColor': '#ffffff', 'primaryBorderColor': '#2563eb', 'primaryTextColor': '#0f172a', 'lineColor': '#475569'}}}%%
+stateDiagram-v2
+    [*] --> Uploaded : Document Uploaded by User
+
+    Uploaded --> Validating : Check File Type & Magic Bytes
+    Validating --> Rejected : Invalid Extension / Corrupt Signature
+    Rejected --> [*] : Temporary File Deleted
+
+    Validating --> Stored : Magic Bytes & MIME Validated
+    Stored --> Ingesting_OCR : Extract Raw Text & Tables
+    
+    Ingesting_OCR --> Extracted : OCR Complete
+    Extracted --> Analyzing_Financials : Calculate KPIs & Ratios
+    
+    Analyzing_Financials --> Anomaly_Scan : Evaluate Discrepancies
+    Anomaly_Scan --> Processed : Analysis Persisted in DB
+
+    state Processed {
+        [*] --> Ready
+        Ready --> Queryable : Available in AI Assistant
+        Ready --> Reportable : Available in Financial Reports
+    }
+
+    Processed --> Deleting : User Confirms Deletion via Modal
+    Deleting --> [*] : Atomic DB Rollback & Physical File Cleanup

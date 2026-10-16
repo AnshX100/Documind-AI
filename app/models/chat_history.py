@@ -1,6 +1,6 @@
 """ChatHistory ORM Model mapping to 'chat_history' database table."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 from app.extensions import db
 
@@ -22,6 +22,7 @@ class ChatHistory(db.Model):
         index=True
     )
     role = db.Column(db.String(20), nullable=False) # 'user' or 'assistant'
+    conversation_id = db.Column(db.String(36), nullable=True, index=True)
     message = db.Column(db.Text, nullable=False)
     referenced_doc_id = db.Column(
         db.BigInteger,
@@ -31,7 +32,7 @@ class ChatHistory(db.Model):
     created_at = db.Column(
         db.DateTime,
         nullable=False,
-        default=datetime.utcnow,
+        default=lambda: datetime.now(timezone.utc),
         index=True
     )
 
