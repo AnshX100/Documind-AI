@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: finpilot-ai
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: FLASK_APP
+        value: run.py
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: finpilot-db
+          property: connectionString
+      - key: UPLOAD_FOLDER
+        value: uploads
+      - key: MAX_CONTENT_LENGTH
+        value: "16777216"
+      - key: OCR_LANGUAGE
+        value: eng
+
+databases:
+  - name: finpilot-db
+    plan: free
+    databaseName: documind_db
+    user: finpilot_user

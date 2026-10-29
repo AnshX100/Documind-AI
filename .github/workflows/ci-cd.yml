@@ -1,0 +1,82 @@
+name: FinPilot AI — CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Automated Tests & Schema Verification
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: documind_db
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install system dependencies (OCR & Document Processing)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            tesseract-ocr \
+            tesseract-ocr-eng \
+            poppler-utils \
+            libmagic1
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest gunicorn
+
+      - name: Apply Database Migrations
+        env:
+          DATABASE_URL: mysql+pymysql://root:rootpassword@127.0.0.1:3306/documind_db
+          FLASK_APP: run.py
+          SECRET_KEY: test-ci-secret-key-2026
+        run: |
+          flask db upgrade
+
+      - name: Execute Full Pytest Suite (103 Tests)
+        env:
+          DATABASE_URL: mysql+pymysql://root:rootpassword@127.0.0.1:3306/documind_db
+          SECRET_KEY: test-ci-secret-key-2026
+          FLASK_ENV: testing
+        run: |
+          python -m pytest -v --tb=short
+
+  docker-build:
+    name: Production Container Build & Verification
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: actions/setup-buildx-action@v3
+
+      - name: Build Production Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: finpilot-ai:latest

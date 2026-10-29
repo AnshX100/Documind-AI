@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: finpilot_web
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=production
+      - SECRET_KEY=production-secret-key-change-in-env-2026
+      - DATABASE_URL=mysql+pymysql://finpilot_user:finpilot_pass@db:3306/documind_db
+      - UPLOAD_FOLDER=uploads
+      - MAX_CONTENT_LENGTH=16777216
+      - OCR_LANGUAGE=eng
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0
+    container_name: finpilot_db
+    environment:
+      - MYSQL_DATABASE=documind_db
+      - MYSQL_USER=finpilot_user
+      - MYSQL_PASSWORD=finpilot_pass
+      - MYSQL_ROOT_PASSWORD=finpilot_root_secret
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "finpilot_user", "-pfinpilot_pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  uploads_data:
