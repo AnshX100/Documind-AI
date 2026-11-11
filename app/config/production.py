@@ -1,20 +1,25 @@
 """Production environment configuration for DocuMind AI."""
 
-import os
 from app.config.base import BaseConfig
 
 
 class ProductionConfig(BaseConfig):
-    """Production configuration enforcing strict security and performance."""
+    """Production configuration with secure defaults."""
 
-    DEBUG: bool = False
-    TESTING: bool = False
-    SESSION_COOKIE_SECURE: bool = True
-    REMEMBER_COOKIE_SECURE: bool = True
-    SESSION_COOKIE_HTTPONLY: bool = True
-    REMEMBER_COOKIE_HTTPONLY: bool = True
+    DEBUG = False
+    TESTING = False
 
-    def __init__(self) -> None:
-        super().__init__()
-        if self.SECRET_KEY == "default-dev-secret-key-must-be-changed":
-            raise ValueError("SECRET_KEY environment variable must be set in Production!")
+    # Production secrets and shared infrastructure are mandatory.
+    # create_app() loads and validates these dynamically at startup.
+    SECRET_KEY = None
+    RATELIMIT_STORAGE_URI = None
+
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+
+    REMEMBER_COOKIE_SECURE = True
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = "Lax"
+
+    PREFERRED_URL_SCHEME = "https"
